@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#10243a">
+  <meta name="description" content="FACILI-TA MED — consulta CID e calculadora de doses para apoio profissional.">
+  <title>FACILI-TA MED</title>
+  <style>
+    :root{color-scheme:dark;--bg:#0b1220;--panel:#142238;--panel2:#0f1b2e;--line:#263b55;--text:#edf5ff;--muted:#a7b8cc;--blue:#38bdf8;--green:#34d399;--red:#fca5a5}
+    *{box-sizing:border-box}
+    body{margin:0;background:radial-gradient(ellipse at top,#17304b 0,#0b1220 55%);font-family:Inter,system-ui,-apple-system,Segoe UI,Arial,sans-serif;color:var(--text);min-height:100vh}
+    header{padding:34px 18px 25px;text-align:center;border-bottom:1px solid var(--line);background:#0c192b}
+    .brand{font-size:clamp(27px,5vw,38px);font-weight:850;letter-spacing:1.4px;color:var(--blue);margin:0}
+    header p{margin:9px 0 0;color:var(--muted);font-size:14px}
+    main{width:min(940px,92%);margin:28px auto 50px}
+    .intro{color:var(--muted);text-align:center;margin:0 auto 22px;max-width:700px;line-height:1.55}
+    .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+    .card{background:linear-gradient(155deg,var(--panel),#101c2e);border:1px solid var(--line);border-radius:17px;padding:22px;box-shadow:0 14px 35px #0003}
+    h2{font-size:21px;margin:0 0 8px}
+    .sub{color:var(--muted);font-size:13px;line-height:1.5;margin:0 0 17px}
+    label{display:block;font-size:13px;color:#c7d7e9;margin:13px 0 6px}
+    input,select{width:100%;padding:13px 14px;border:1px solid #3a506b;border-radius:10px;background:var(--panel2);color:var(--text);font-size:15px;outline:none}
+    input:focus,select:focus{border-color:var(--blue);box-shadow:0 0 0 3px #38bdf822}
+    button{width:100%;border:0;border-radius:10px;padding:13px 16px;margin-top:13px;background:linear-gradient(90deg,#0284c7,#0ea5e9);color:white;font-size:15px;font-weight:750;cursor:pointer}
+    button:disabled{opacity:.6;cursor:wait}
+    .result{margin-top:16px;padding:14px;border-radius:11px;background:#0a1728;border:1px solid var(--line);line-height:1.55;overflow-wrap:anywhere}
+    .result:empty{display:none}
+    .item{padding:11px 0;border-bottom:1px solid #263b55}
+    .item:last-child{border-bottom:0}
+    .code{font-weight:800;color:var(--blue);font-size:17px}
+    .muted{color:var(--muted);font-size:12px}
+    .notice{margin-top:14px;padding:12px;border-left:3px solid #fbbf24;background:#2a2416;color:#f8e8bb;border-radius:7px;font-size:12px;line-height:1.5}
+    .dose-value{font-size:23px;font-weight:850;color:var(--green)}
+    footer{text-align:center;color:var(--muted);font-size:12px;padding:24px 15px;border-top:1px solid var(--line)}
+    @media(max-width:720px){.grid{grid-template-columns:1fr}.card{padding:19px}main{margin-top:20px}}
+  </style>
+</head>
+<body>
+  <header>
+    <h1 class="brand">FACILI-TA MED</h1>
+    <p>Consulta CID e cálculos de doses</p>
+  </header>
+
+  <main>
+    <p class="intro">Ferramentas de apoio para profissionais da saúde. Confira sempre as fontes e os dados clínicos antes de tomar decisões assistenciais.</p>
+
+    <div class="grid">
+      <section class="card">
+        <h2>Consulta CID</h2>
+        <p class="sub">Consulte CID-10 e CID-11 por código. A busca por descrição depende do plano contratado da API.</p>
+
+        <label for="cidQuery">Pesquisar por doença ou descrição</label>
+        <input id="cidQuery" type="search" placeholder="Ex.: diabetes (busca textual)">
+        <button id="searchText">Pesquisar descrição</button>
+
+        <label for="cidCode">Ou consultar diretamente pelo código</label>
+        <input id="cidCode" type="text" placeholder="Ex.: A00 ou I10" autocomplete="off">
+        <button id="searchCode">Consultar código</button>
+
+        <div id="cidResult" class="result" role="status" aria-live="polite"></div>
+        <p class="muted">Fonte de dados: API cid.api.br. Verifique a classificação e a versão aplicável ao seu contexto.</p>
+      </section>
+
+      <section class="card">
+        <h2>Calculadora de doses</h2>
+        <p class="sub">Calcula uma dose já prescrita em mg/kg e converte o resultado em volume, conforme a concentração informada.</p>
+
+        <label for="weight">Peso do paciente (kg)</label>
+        <input id="weight" type="number" min="0.001" step="any" placeholder="Ex.: 20">
+
+        <label for="dose">Dose prescrita (mg/kg por administração)</label>
+        <input id="dose" type="number" min="0.001" step="any" placeholder="Ex.: 10">
+
+        <label for="concentration">Concentração disponível (mg/mL)</label>
+        <input id="concentration" type="number" min="0.001" step="any" placeholder="Ex.: 50">
+
+        <button id="calculate">Calcular volume</button>
+        <div id="doseResult" class="result" role="status" aria-live="polite"></div>
+        <div class="notice">A calculadora não recomenda medicamentos nem determina a dose apropriada. Ela apenas realiza a operação matemática com os valores inseridos. Confirme prescrição, unidade, concentração, dose máxima, via e frequência antes da administração.</div>
+      </section>
+    </div>
+  </main>
+
+  <footer>
+    FACILI-TA MED · Criado por RENER DIBAI © 2026
+  </footer>
+
+  <script>
+    // Depois de publicar o Worker, coloque aqui a URL dele.
+    const API_BASE = "COLE_A_URL_DO_SEU_WORKER_AQUI";
+
+    const $ = (id) => document.getElementById(id);
+    const escapeHTML = (value) => String(value ?? "").replace(/[&<>"']/g, c => ({
+      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+    })[c]);
+
+    function showError(target, message) {
+      target.innerHTML = '<span style="color:#fca5a5">' + escapeHTML(message) + '</span>';
+    }
+
+    async function queryCID(params) {
+      const output = $("cidResult");
+      if (!API_BASE || API_BASE.includes("COLE_A_URL")) {
+        showError(output, "Configure a URL do Worker no início do JavaScript deste arquivo.");
+        return;
+      }
+
+      output.textContent = "Consultando a base CID...";
+      $("searchText").disabled = true;
+      $("searchCode").disabled = true;
+
+      try {
+        const response = await fetch(API_BASE + "/api/cid?" + new URLSearchParams(params));
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.mensagem || data.message || data.erro || "Falha na consulta (HTTP " + response.status + ").");
+        }
+
+        const records = Array.isArray(data) ? data :
+          (data.resultados || data.results || data.items || data.data || null);
+
+        if (records && Array.isArray(records)) {
+          if (!records.length) {
+            output.textContent = "Nenhum resultado encontrado.";
+          } else {
+            output.innerHTML = records.map(item => {
+              const code = item.codigo || item.code || item.cid || "";
+              const desc = item.descricao || item.description || item.nome || item.name || "";
+              return '<div class="item"><div class="code">' + escapeHTML(code) + '</div><div>' + escapeHTML(desc) + '</div></div>';
+            }).join("");
+          }
+        } else {
+          const code = data.codigo || data.code || "";
+          const desc = data.descricao || data.description || data.nome || "";
+          if (code || desc) {
+            output.innerHTML = '<div class="code">' + escapeHTML(code) + '</div><div>' + escapeHTML(desc) + '</div>' +
+              (data.capituloDesc ? '<p class="muted">Capítulo: ' + escapeHTML(data.capituloDesc) + '</p>' : '') +
+              (data.grupoDesc ? '<p class="muted">Grupo: ' + escapeHTML(data.grupoDesc) + '</p>' : '');
+          } else {
+            output.textContent = JSON.stringify(data, null, 2);
+          }
+        }
+      } catch (error) {
+        showError(output, error.message || "Não foi possível consultar. Tente novamente.");
+      } finally {
+        $("searchText").disabled = false;
+        $("searchCode").disabled = false;
+      }
+    }
+
+    $("searchText").addEventListener("click", () => {
+      const q = $("cidQuery").value.trim();
+      if (q.length < 2) return showError($("cidResult"), "Digite pelo menos 2 caracteres.");
+      queryCID({ q });
+    });
+
+    $("searchCode").addEventListener("click", () => {
+      const code = $("cidCode").value.trim();
+      if (!code) return showError($("cidResult"), "Digite um código CID.");
+      queryCID({ code });
+    });
+
+    $("cidQuery").addEventListener("keydown", e => {
+      if (e.key === "Enter") $("searchText").click();
+    });
+    $("cidCode").addEventListener("keydown", e => {
+      if (e.key === "Enter") $("searchCode").click();
+    });
+
+    $("calculate").addEventListener("click", () => {
+      const weight = Number($("weight").value);
+      const dose = Number($("dose").value);
+      const concentration = Number($("concentration").value);
+      const output = $("doseResult");
+
+      if (![weight, dose, concentration].every(Number.isFinite) ||
+          weight <= 0 || dose <= 0 || concentration <= 0) {
+        showError(output, "Preencha os três campos com números maiores que zero.");
+        return;
+      }
+
+      const totalMg = weight * dose;
+      const volumeMl = totalMg / concentration;
+
+      if (!Number.isFinite(totalMg) || !Number.isFinite(volumeMl)) {
+        showError(output, "Não foi possível calcular. Confira os valores.");
+        return;
+      }
+
+      output.innerHTML =
+        '<div class="muted">Resultado matemático — não é recomendação de dose</div>' +
+        '<p>Dose total calculada: <strong>' + totalMg.toLocaleString("pt-BR", {maximumFractionDigits: 4}) + ' mg</strong></p>' +
+        '<p>Concentração informada: <strong>' + concentration.toLocaleString("pt-BR") + ' mg/mL</strong></p>' +
+        '<div class="dose-value">' + volumeMl.toLocaleString("pt-BR", {maximumFractionDigits: 4}) + ' mL</div>';
+    });
+  </script>
+</body>
+</html>
