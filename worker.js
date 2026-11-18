@@ -114,7 +114,7 @@ async function handler(req,env){
  if(p==="/api/electronic/settings"&&req.method==="PUT"){
   const subject=String(b.certificate_subject||"").trim().slice(0,300),serial=String(b.certificate_serial||"").trim().slice(0,160),fingerprint=String(b.certificate_fingerprint||"").replace(/[^a-fA-F0-9:]/g,"").slice(0,128),validUntil=String(b.certificate_valid_until||"").slice(0,10);
   if(!doctor.doctor_name||!doctor.crm)return error("Complete primeiro seu nome e CRM no perfil profissional.",400,o);
-  if(validUntil&&!/^\\d{4}-\\d{2}-\\d{2}$/.test(validUntil))return error("Data de validade do certificado inválida.",400,o);
+  if(validUntil&&!/^\d{4}-\d{2}-\d{2}$/.test(validUntil))return error("Data de validade do certificado inválida.",400,o);
   if([subject,serial,fingerprint,validUntil].some(v=>v.length>0)&&(!subject||!serial||!fingerprint||!validUntil))return error("Para registrar os metadados, preencha titular, número de série, impressão digital e validade.",400,o);
   const certStatus=subject&&serial&&fingerprint&&validUntil?"declared_not_verified":"not_configured";
   await env.DB.prepare("INSERT INTO doctor_electronic_settings(doctor_id,signature_method,certificate_subject,certificate_serial,certificate_fingerprint,certificate_valid_until,certificate_status,sncr_status,updated_at) VALUES(?,'icp_brasil',?,?,?,?,?,'not_connected',datetime('now')) ON CONFLICT(doctor_id) DO UPDATE SET certificate_subject=excluded.certificate_subject,certificate_serial=excluded.certificate_serial,certificate_fingerprint=excluded.certificate_fingerprint,certificate_valid_until=excluded.certificate_valid_until,certificate_status=excluded.certificate_status,updated_at=datetime('now')").bind(doctor.id,subject,serial,fingerprint,validUntil,certStatus).run();
