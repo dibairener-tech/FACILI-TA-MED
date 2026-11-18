@@ -130,7 +130,7 @@
     <p class="sub">Entre ou crie sua conta gratuita para salvar seu perfil profissional e suas receitas na nuvem.</p>
     <div class="account-grid">
       <div><label for="accountEmail">E-mail</label><input id="accountEmail" type="email" autocomplete="username" placeholder="seu@email.com"></div>
-      <div><label for="accountPassword">Senha</label><input id="accountPassword" type="password" autocomplete="current-password" minlength="12" placeholder="Mínimo de 12 caracteres"></div>
+      <div><label for="accountPassword">Senha</label><input id="accountPassword" type="password" autocomplete="current-password" minlength="8" placeholder="Mínimo de 8 caracteres"></div>
     </div>
     <div class="account-actions"><button type="button" id="accountLogin">Entrar</button><button type="button" id="accountRegister" class="btn-secondary">Criar conta grátis</button></div>
     <div class="account-status" id="accountStatus" role="status">As receitas continuam disponíveis para impressão; o salvamento na nuvem exige uma conta.</div>
@@ -498,7 +498,7 @@
     async function authenticate(mode) {
       const email=$a("accountEmail").value.trim(),password=$a("accountPassword").value;
       if(!email||!password){setStatus("Informe e-mail e senha.");return;}
-      if(mode==="register"&&password.length<12){setStatus("A senha precisa ter pelo menos 12 caracteres.");return;}
+      if(mode==="register"&&password.length<8){setStatus("A senha precisa ter pelo menos 8 caracteres.");return;}
       const btn=$a(mode==="login"?"accountLogin":"accountRegister");btn.disabled=true;
       try {
         const data=await api("/api/auth/"+mode,{method:"POST",body:JSON.stringify({email,password})});
