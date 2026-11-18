@@ -229,6 +229,18 @@
     <div class="med-card"><h3>Certificado digital</h3><p class="sub">Assinatura qualificada ICP-Brasil do próprio médico. A chave privada não será enviada nem armazenada no FACILI-TA MED.</p><strong id="electronicCertificateStatus">Ainda não configurado</strong></div>
     <div class="med-card"><h3>Integração SNCR</h3><p class="sub">Conexão do serviço de prescrição à API oficial da Anvisa, com numeração e modelos oficiais conforme o tipo de receituário.</p><strong id="electronicSncrStatus">Integração ainda não habilitada</strong></div>
   </div>
+  <div class="profile-box">
+    <h3>Certificado digital do profissional</h3>
+    <p class="sub">Registre somente os dados públicos de identificação do certificado ICP-Brasil. Esta tela não recebe arquivo A1/A3, senha, PIN ou chave privada. O registro abaixo não valida o certificado nem habilita assinatura.</p>
+    <div class="profile-grid">
+      <div><label for="electronicCertSubject">Titular do certificado</label><input id="electronicCertSubject" autocomplete="off" placeholder="Nome conforme certificado"></div>
+      <div><label for="electronicCertSerial">Número de série</label><input id="electronicCertSerial" autocomplete="off" placeholder="Número público do certificado"></div>
+      <div><label for="electronicCertFingerprint">Impressão digital (SHA-1/SHA-256)</label><input id="electronicCertFingerprint" autocomplete="off" placeholder="Impressão digital pública"></div>
+      <div><label for="electronicCertExpiry">Validade</label><input id="electronicCertExpiry" type="date"></div>
+    </div>
+    <div class="rx-actions"><button type="button" id="electronicSaveCertificate">Salvar identificação do certificado</button></div>
+    <div class="profile-status" id="electronicCertificateSaveStatus">Nenhum certificado registrado.</div>
+  </div>
   <div class="notice">Esta área está em preparação. Ainda não emite receitas eletrônicas oficiais, não solicita numeração ao SNCR e não realiza assinatura digital. Não utilize esta tela para prescrever medicamentos controlados. A emissão real só será habilitada após integração homologada/testada conforme os requisitos oficiais.</div>
   <div class="profile-box">
     <h3>Laboratório de testes — modo simulado</h3>
@@ -549,7 +561,7 @@
     }
     async function refreshSession() {
       if(!token()){showAccount(null);return;}
-      try { const data=await api("/api/auth/me"); showAccount(data.doctor); setStatus("Sessão ativa."); await loadHistory(); }
+      try { const data=await api("/api/auth/me"); showAccount(data.doctor); setStatus("Sessão ativa."); await loadHistory(); await loadElectronicSettings(); }
       catch {sessionStorage.removeItem(TOKEN_KEY);showAccount(null);setStatus("Sua sessão expirou. Entre novamente.");}
     }
     async function authenticate(mode) {
@@ -562,24 +574,48 @@
         sessionStorage.setItem(TOKEN_KEY,data.token);
         const me=await api("/api/auth/me");showAccount(me.doctor);
         setStatus(mode==="register"?"Conta criada com sucesso. Complete seu perfil profissional.":"Login realizado com sucesso.");
-        await loadHistory();
+        await loadHistory(); await loadElectronicSettings();
       } catch(e){setStatus(e.message);}
       finally{btn.disabled=false;}
     }
-    $a("electronicRunSimulation").addEventListener("click",()=>{
+    async function loadElectronicSettings(){
+      if(!token())return;
+      try{
+        const data=await api("/api/electronic/settings");
+        const s=data.settings||{};
+        $a("electronicCertSubject").value=s.certificate_subject||"";
+        $a("electronicCertSerial").value=s.certificate_serial||"";
+        $a("electronicCertFingerprint").value=s.certificate_fingerprint||"";
+        $a("electronicCertExpiry").value=s.certificate_valid_until||"";
+        $a("electronicCertificateStatus").textContent=s.certificate_status==="declared_not_verified"?"Dados declarados — certificado ainda não validado":"Ainda não configurado";
+        $a("electronicSncrStatus").textContent="Não conectado — integração oficial pendente";
+        $a("electronicCertificateSaveStatus").textContent=s.certificate_status==="declared_not_verified"?"Identificação pública salva. A validade e a titularidade ainda precisam ser verificadas.":"Nenhum certificado registrado.";
+      }catch(e){$a("electronicCertificateSaveStatus").textContent="Não foi possível carregar as configurações: "+e.message;}
+    }
+    $a("electronicSaveCertificate").addEventListener("click",async()=>{
+      if(!token()){ $a("electronicCertificateSaveStatus").textContent="Entre na sua conta FACILI-TA MED primeiro."; return; }
+      const btn=$a("electronicSaveCertificate");btn.disabled=true;
+      try{
+        const body={certificate_subject:$a("electronicCertSubject").value.trim(),certificate_serial:$a("electronicCertSerial").value.trim(),certificate_fingerprint:$a("electronicCertFingerprint").value.trim(),certificate_valid_until:$a("electronicCertExpiry").value};
+        const data=await api("/api/electronic/settings",{method:"PUT",body:JSON.stringify(body)});
+        $a("electronicCertificateStatus").textContent=data.certificate_status==="declared_not_verified"?"Dados declarados — certificado ainda não validado":"Ainda não configurado";
+        $a("electronicCertificateSaveStatus").textContent="Dados públicos salvos na conta. Isso não conecta nem valida o certificado.";
+      }catch(e){$a("electronicCertificateSaveStatus").textContent=e.message;}
+      finally{btn.disabled=false;}
+    });
+    $a("electronicRunSimulation").addEventListener("click",async()=>{
       const output=$a("electronicSimulationResult");
-      const steps=[
-        ["PASSOU","Isolamento do modo de teste: nenhuma chamada externa foi realizada."],
-        ["PASSOU","Identificação fictícia: não foi solicitado CRM, CPF ou dado de médico real."],
-        ["PASSOU","Numeração: nenhum número SNCR foi solicitado ou criado."],
-        ["PASSOU","Assinatura: nenhuma chave, certificado ou PIN foi acessado."],
-        ["PASSOU","Documento: nenhum receituário foi emitido ou gerado."]
-      ];
-      output.innerHTML='<strong>SIMULAÇÃO — SEM VALIDADE LEGAL</strong><div class="item">'+steps.map(([status,label])=>'<div><strong style="color:#34d399">'+status+'</strong> · '+escapeHTML(label)+'</div>').join("")+'</div><div class="muted">Resultado: fluxo básico de isolamento aprovado. Isto não testa a API da Anvisa, autenticação Gov.br nem assinatura ICP-Brasil.</div>';
+      if(!token()){output.textContent="Entre na sua conta FACILI-TA MED para executar a simulação individual.";return;}
+      const btn=$a("electronicRunSimulation");btn.disabled=true;output.textContent="Executando simulação isolada…";
+      try{
+        const data=await api("/api/electronic/simulate",{method:"POST",body:"{}"});
+        output.innerHTML='<strong>SIMULAÇÃO — NÃO É RECEITA</strong><div class="item">'+data.steps.map(step=>'<div><strong style="color:#34d399">PASSOU</strong> · '+escapeHTML(step.message)+'</div>').join("")+'</div><div class="muted">'+escapeHTML(data.message)+'</div>';
+      }catch(e){output.textContent="Falha na simulação: "+e.message;}
+      finally{btn.disabled=false;}
     });
     $a("electronicProfileRefresh").addEventListener("click",async()=>{
       if(!token()){refreshElectronicIdentity();return;}
-      try{const d=await api("/api/auth/me");currentDoctor=d.doctor;refreshElectronicIdentity();}
+      try{const d=await api("/api/auth/me");currentDoctor=d.doctor;refreshElectronicIdentity();await loadElectronicSettings();}
       catch(e){$a("electronicModuleStatus").textContent="Não foi possível atualizar a identificação: "+e.message;}
     });
     $a("electronicHome").addEventListener("click",()=>document.querySelector('[data-section="cidSection"]').click());
