@@ -33,7 +33,7 @@ async function handler(req,env){
  if(p==="/api/auth/register"&&req.method==="POST"){
   const email=String(b.email||"").trim().toLowerCase(),pw=String(b.password||"");
   if(!validEmail(email))return error("Informe um e-mail válido.",400,o);
-  if(pw.length<12||pw.length>128)return error("A senha deve ter entre 12 e 128 caracteres.",400,o);
+  if(pw.length<8||pw.length>128)return error("A senha deve ter entre 8 e 128 caracteres.",400,o);
   if(await limited(env,email))return error("Muitas tentativas. Aguarde 15 minutos.",429,o,"rate_limited");
   if(await env.DB.prepare("SELECT id FROM doctors WHERE email=?").bind(email).first())return error("Não foi possível criar a conta com esses dados. Verifique o e-mail.",409,o,"account_exists");
   const x=await derive(pw),id=crypto.randomUUID();
