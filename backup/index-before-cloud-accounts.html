@@ -1,0 +1,417 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#07110d">
+  <meta name="description" content="FACILI-TA MED — consulta CID, cálculos de doses e facilitador de prescrição.">
+  <title>FACILI-TA MED</title>
+  <style>
+    :root{color-scheme:dark;--bg:#070d0a;--panel:#111d17;--panel2:#0c1711;--line:#263c30;--text:#edf7f0;--muted:#a8b9ad;--blue:#34d399;--green:#34d399;--red:#fca5a5}
+    *{box-sizing:border-box}
+    body{margin:0;position:relative;background:radial-gradient(ellipse at 50% 0%,#10291b 0,#070d0a 58%);font-family:Inter,system-ui,-apple-system,Segoe UI,Arial,sans-serif;color:var(--text);min-height:100vh;isolation:isolate}
+    body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Ctext x='16' y='112' font-family='Arial,sans-serif' font-size='80' fill='%2334d399' fill-opacity='.19'%3E%E2%9A%95%3C/text%3E%3C/svg%3E");background-repeat:repeat;opacity:.65}
+    header,main,footer{position:relative;z-index:1}
+    header{padding:34px 18px 25px;text-align:center;border-bottom:1px solid var(--line);background:rgba(7,17,12,.78);backdrop-filter:blur(8px)}
+    .brand{font-size:clamp(27px,5vw,38px);font-weight:850;letter-spacing:1.4px;color:var(--green);margin:0}
+    header p{margin:9px 0 0;color:var(--muted);font-size:14px}
+    main{width:min(940px,92%);margin:28px auto 50px}
+    .intro{color:var(--muted);text-align:center;margin:0 auto 22px;max-width:700px;line-height:1.55}
+    .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+    .main-nav{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:0 0 20px}.nav-btn{margin:0;background:#13251b;border:1px solid var(--line);color:var(--muted);padding:13px 8px}.nav-btn.active{background:linear-gradient(90deg,#047857,#10b981);color:#fff;border-color:#10b981}.tool-section[hidden]{display:none!important}.section-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}.section-head h2{margin:0}.section-actions{display:flex;gap:8px;flex-wrap:wrap}.section-actions button{width:auto;margin:0;padding:9px 12px;font-size:12px}.profile-box{padding:13px;border:1px solid var(--line);border-radius:12px;background:#0b1911;margin-bottom:16px}.profile-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 16px}.profile-status{font-size:12px;color:var(--green);margin-top:8px}@media(max-width:720px){.main-nav{gap:6px}.nav-btn{font-size:12px;padding:12px 5px}.section-head{align-items:flex-start;flex-direction:column}.profile-grid{grid-template-columns:1fr}}
+    .card{background:linear-gradient(155deg,var(--panel),#101c2e);border:1px solid var(--line);border-radius:17px;padding:22px;box-shadow:0 14px 35px #0003}
+    h2{font-size:21px;margin:0 0 8px}
+    .sub{color:var(--muted);font-size:13px;line-height:1.5;margin:0 0 17px}
+    label{display:block;font-size:13px;color:#c7d7e9;margin:13px 0 6px}
+    input,select{width:100%;padding:13px 14px;border:1px solid #3a506b;border-radius:10px;background:var(--panel2);color:var(--text);font-size:15px;outline:none}
+    input:focus,select:focus{border-color:var(--blue);box-shadow:0 0 0 3px #38bdf822}
+    button{width:100%;border:0;border-radius:10px;padding:13px 16px;margin-top:13px;background:linear-gradient(90deg,#047857,#10b981);color:white;font-size:15px;font-weight:750;cursor:pointer}
+    button:disabled{opacity:.6;cursor:wait}
+    .result{margin-top:16px;padding:14px;border-radius:11px;background:#0a1728;border:1px solid var(--line);line-height:1.55;overflow-wrap:anywhere}
+    .result:empty{display:none}
+    .item{padding:11px 0;border-bottom:1px solid #263b55}
+    .item:last-child{border-bottom:0}
+    .code{font-weight:800;color:var(--blue);font-size:17px}
+    .muted{color:var(--muted);font-size:12px}
+    .notice{margin-top:14px;padding:12px;border-left:3px solid #fbbf24;background:#2a2416;color:#f8e8bb;border-radius:7px;font-size:12px;line-height:1.5}
+    .dose-value{font-size:23px;font-weight:850;color:var(--green)}
+    footer{text-align:center;color:var(--muted);font-size:12px;padding:24px 15px;border-top:1px solid var(--line)}
+    @media(max-width:720px){.grid{grid-template-columns:1fr}.card{padding:19px}main{margin-top:20px}}
+  
+    .wide{grid-column:1/-1}
+    .rx-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 16px}
+    .rx-grid .full{grid-column:1/-1}
+    .rx-actions{display:flex;gap:10px;flex-wrap:wrap}
+    .rx-actions button{flex:1;min-width:180px}
+    .btn-secondary{background:#334a65}
+    .med-card{border:1px solid var(--line);border-radius:12px;padding:14px;margin:14px 0;background:#0d1a2b}
+    .med-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+    .med-head strong{color:var(--blue)}
+    .remove-med{width:auto;margin:0;padding:7px 10px;background:#7f1d1d;font-size:12px}
+
+    /* Receituário: visual limpo, compacto e otimizado para A4 */
+    .rx-paper{font-family:Arial,Helvetica,sans-serif;color:#172536;background:#fff;width:100%;max-width:820px;margin:18px auto 0;padding:34px 38px;border:1px solid #dbe3ec;border-radius:8px;box-shadow:0 8px 28px #0002}
+    .rx-paper-head{display:flex;justify-content:space-between;gap:24px;align-items:flex-start;padding-bottom:16px;border-bottom:3px solid #17466d}
+    .rx-brand{font-size:10px;letter-spacing:2px;font-weight:800;color:#2877a8;text-transform:uppercase;margin-bottom:7px}
+    .rx-doctor-name{font-size:19px;font-weight:800;color:#142f49;line-height:1.2}
+    .rx-doctor-meta{font-size:10.5px;color:#526477;line-height:1.55;margin-top:5px}
+    .rx-doc-date{font-size:10.5px;color:#526477;text-align:right;white-space:nowrap}
+    .rx-paper-title{font-size:15px;letter-spacing:1.5px;font-weight:800;text-align:center;color:#173c5d;margin:19px 0 15px}
+    .rx-patient-box{background:#f3f7fa;border:1px solid #dce6ee;border-radius:5px;padding:10px 13px;margin-bottom:17px}
+    .rx-section-label{font-size:8px;letter-spacing:1.3px;text-transform:uppercase;color:#6b7f91;font-weight:800;margin-bottom:5px}
+    .rx-patient-name{font-size:12px;font-weight:700;color:#1c3349}
+    .rx-patient-meta{font-size:9.5px;color:#526477;margin-top:3px;line-height:1.4}
+    .rx-prescription-label{font-size:9px;letter-spacing:1.2px;text-transform:uppercase;color:#55738d;font-weight:800;margin-bottom:4px}
+    .rx-drug{padding:10px 0 11px;border-bottom:1px solid #e1e7ed;break-inside:avoid;page-break-inside:avoid;white-space:normal}
+    .rx-drug-title{font-size:12px;font-weight:800;color:#172f46;line-height:1.35}
+    .rx-drug-presentation{font-size:10px;color:#5b6d7d;margin-top:2px}
+    .rx-drug-details{display:flex;flex-wrap:wrap;gap:5px 17px;margin-top:7px;font-size:9.5px;color:#33495d;line-height:1.4}
+    .rx-drug-details span b{color:#1c3349}
+    .rx-drug-instructions{font-size:9.5px;color:#33495d;margin-top:5px;line-height:1.4}
+    .rx-paper-footer{display:flex;justify-content:space-between;gap:20px;align-items:flex-end;margin-top:30px;break-inside:avoid;page-break-inside:avoid}
+    .rx-signature{width:250px;max-width:55%;text-align:center;font-size:9.5px;color:#263b50;padding-top:7px;border-top:1px solid #526477}
+    .rx-signature small{display:block;color:#718092;font-size:8.5px;margin-top:3px}
+    .rx-clinic-foot{font-size:8.5px;color:#718092;max-width:45%;line-height:1.4}
+    .rx-paper-note{font-size:8px;color:#7a8794;margin-top:16px;padding-top:8px;border-top:1px solid #e3e8ed;line-height:1.35}
+    @media print{
+      @page{size:A4 portrait;margin:10mm}
+      html,body{width:100%!important;min-height:0!important;margin:0!important;padding:0!important;background:#fff!important;color:#172536!important}
+      body *{visibility:hidden!important}
+      #prescriptionPrint,#prescriptionPrint *{visibility:visible!important}
+      #prescriptionPrint{display:block!important;position:absolute!important;left:0!important;top:0!important;width:100%!important;margin:0!important;padding:0!important;background:#fff!important}
+      #prescriptionPrint .rx-paper{width:100%!important;max-width:none!important;margin:0!important;padding:0!important;border:0!important;border-radius:0!important;box-shadow:none!important}
+      #prescriptionPrint .rx-paper-head{padding-bottom:10px}
+      #prescriptionPrint .rx-paper-title{margin:12px 0 10px}
+      #prescriptionPrint .rx-patient-box{padding:8px 10px;margin-bottom:10px}
+      #prescriptionPrint .rx-drug{padding:7px 0 8px}
+      #prescriptionPrint .rx-paper-footer{margin-top:23px}
+      #prescriptionPrint .rx-paper-note{margin-top:10px}
+      #prescriptionPrint *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+    }
+    @media(max-width:720px){.rx-paper{padding:22px 18px}.rx-paper-head{gap:12px}.rx-doc-date{white-space:normal}}
+
+
+  
+    .catalog-wrap{position:relative}
+    .catalog-hint{font-size:11px;color:var(--muted);margin:5px 0 0}
+    .catalog-results{position:absolute;z-index:20;top:100%;left:0;right:0;max-height:280px;overflow:auto;background:#102139;border:1px solid #4b6685;border-radius:10px;box-shadow:0 14px 28px #0008}
+    .catalog-option{display:block;width:100%;text-align:left;margin:0;border-radius:0;background:transparent;border-bottom:1px solid #263b55;padding:11px 13px;font-weight:500}
+    .catalog-option:hover{background:#1d3b59}
+    .catalog-option small{display:block;color:#b8c8da;font-weight:400;margin-top:3px}
+    .catalog-warning{font-size:11px;color:#fbbf24;margin-top:5px;line-height:1.4}
+    .catalog-status{font-size:11px;color:var(--muted);margin-top:12px}
+
+  </style>
+</head>
+<body>
+  <header>
+    <h1 class="brand">FACILI-TA MED</h1>
+    <p>Consulta CID e cálculos de doses, prescrição</p>
+  </header>
+
+  <main>
+<nav class="main-nav" aria-label="Seções do aplicativo">
+<button type="button" class="nav-btn active" data-section="cidSection">Consulta CID</button><button type="button" class="nav-btn" data-section="doseSection">Calculadora</button><button type="button" class="nav-btn" data-section="prescriptionModule">Receitas</button></nav>
+<section class="tool-section" id="cidSection"><div class="section-head"><h2>Consulta CID</h2><div class="section-actions"><button type="button" class="btn-secondary" id="cidClear">Limpar</button><button type="button" class="btn-secondary" id="cidHome">Início</button></div></div><section class="card">
+        <h2>Consulta CID</h2>
+        <p class="sub">Consulte a base CID-10 diretamente no aplicativo, sem depender de API externa ou limite de consultas.</p>
+
+        <label for="cidQuery">Pesquisar por doença ou descrição</label>
+        <input id="cidQuery" type="search" placeholder="Ex.: diabetes (busca textual)">
+        <button id="searchText">Pesquisar descrição</button>
+
+        <label for="cidCode">Ou consultar diretamente pelo código</label>
+        <input id="cidCode" type="text" placeholder="Ex.: A00 ou I10" autocomplete="off">
+        <button id="searchCode">Consultar código</button>
+
+        <div id="cidResult" class="result" role="status" aria-live="polite"></div>
+        <p class="muted" id="cidVersion">Pacote local 2026.11 · carregando metadados…</p>
+      </section></section>
+<section class="tool-section" id="doseSection" hidden><div class="section-head"><h2>Calculadora de doses</h2><div class="section-actions"><button type="button" class="btn-secondary" id="doseClear">Limpar</button><button type="button" class="btn-secondary" id="doseHome">Início</button></div></div><section class="card">
+        <h2>Calculadora de doses</h2>
+        <p class="sub">Calcula uma dose já prescrita em mg/kg e converte o resultado em volume, conforme a concentração informada.</p>
+
+        <label for="weight">Peso do paciente (kg)</label>
+        <input id="weight" type="number" min="0.001" step="any" placeholder="Ex.: 20">
+
+        <label for="dose">Dose prescrita (mg/kg por administração)</label>
+        <input id="dose" type="number" min="0.001" step="any" placeholder="Ex.: 10">
+
+        <label for="concentration">Concentração disponível (mg/mL)</label>
+        <input id="concentration" type="number" min="0.001" step="any" placeholder="Ex.: 50">
+
+        <button id="calculate">Calcular volume</button>
+        <div id="doseResult" class="result" role="status" aria-live="polite"></div>
+        <div class="notice">A calculadora não recomenda medicamentos nem determina a dose apropriada. Ela apenas realiza a operação matemática com os valores inseridos. Confirme prescrição, unidade, concentração, dose máxima, via e frequência antes da administração.</div>
+      </section></section><section class="card wide tool-section" id="prescriptionModule" hidden>
+      <div class="section-head"><h2>Receitas</h2><div class="section-actions"><button type="button" class="btn-secondary" id="rxClearPatient">Limpar paciente</button><button type="button" class="btn-secondary" id="rxHome">Início</button></div></div>
+<p class="sub">Salve seu perfil profissional neste navegador. Nas próximas receitas, basta informar o nome e a data de nascimento do paciente.</p>
+<div class="profile-box"><h3>Perfil do médico</h3><div class="profile-grid">
+<div><label for="rxDoctor">Nome completo</label><input id="rxDoctor" autocomplete="name" placeholder="Nome do médico"></div>
+<div><label for="rxCrm">CRM / UF</label><input id="rxCrm" placeholder="Ex.: CRM-SP 123456"></div>
+<div><label for="rxPhone">Telefone</label><input id="rxPhone" placeholder="Telefone profissional"></div>
+<div><label for="rxCpf">CPF</label><input id="rxCpf" inputmode="numeric" placeholder="000.000.000-00"></div>
+<div><label for="rxSpecialty">Especialidade (opcional)</label><input id="rxSpecialty" placeholder="Especialidade"></div>
+<div class="full"><label for="rxClinicAddress">Endereço profissional</label><input id="rxClinicAddress" placeholder="Rua, número, complemento, cidade/UF, CEP"></div>
+</div><div class="rx-actions"><button type="button" id="rxSaveProfile">Salvar perfil do médico</button><button type="button" id="rxEditProfile" class="btn-secondary">Editar perfil</button></div><div id="rxProfileStatus" class="profile-status">Perfil ainda não salvo neste navegador.</div></div>
+<div class="rx-grid"><div class="full"><h3>Identificação do paciente</h3></div>
+<div class="full"><label for="rxPatient">Nome completo</label><input id="rxPatient" autocomplete="name" placeholder="Nome completo do paciente"></div>
+<div><label for="rxBirth">Data de nascimento</label><input id="rxBirth" type="date"></div>
+<div><label for="rxAge">Idade calculada automaticamente</label><input id="rxAge" readonly placeholder="Calculada automaticamente"></div>
+</div><div class="med-head"><h3>Medicamentos</h3><span class="muted">Inclua um ou mais itens</span></div>
+      <div id="rxMedications"></div>
+      <div class="catalog-status">Catálogo local inicial: 25 princípios ativos, com apresentações de referência. Não é uma lista completa de todos os medicamentos registrados no Brasil; a inclusão no catálogo não confirma registro ativo ou disponibilidade comercial.</div>
+      <div class="rx-actions">
+        <button type="button" id="rxAddMedication" class="btn-secondary">+ Adicionar medicamento</button>
+        <button type="button" id="rxGenerate">Gerar prévia da receita</button>
+        <button type="button" id="rxPrint" class="btn-secondary" disabled>Imprimir / Salvar PDF</button>
+      </div>
+      <div id="rxMessage" class="result" role="status" aria-live="polite"></div>
+      <div class="rx-legal"><strong>Importante — escopo desta versão:</strong> o catálogo é uma referência local inicial, não uma base regulatória completa. Antimicrobianos e medicamentos sujeitos a controle especial exibem alerta e não devem ser emitidos neste modelo simples. O sistema não valida registro ativo, disponibilidade, bula, dose ou adequação clínica. O prescritor deve confirmar a classificação e as regras vigentes. O documento precisa ser conferido, datado e assinado; não é receita eletrônica assinada digitalmente nem substitui os receituários e sistemas oficiais.</div>
+      <div id="prescriptionPrint" class="print-only"><div id="rxPreview" class="rx-preview"></div></div>
+    </section>
+</main>
+
+  <footer>
+    Base local v2026.11 · DATASUS V2008 + códigos U07/SIM + complementos OMS 2019/2020.<br>Projeto Brazilian Utils (MIT). Base auxiliar de consulta; confirme a classificação e as regras oficiais vigentes.<br>
+    FACILI-TA MED · Criado por RENER DIBAI © 2026
+  </footer>
+
+  <script src="cid-data.js"></script>
+  <script src="medication-data.js"></script>
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const CID10 = window.CID10_DATA || [];
+    const CID_META = window.CID10_META || {};
+    const versionLine = $("cidVersion");
+    if (versionLine) versionLine.textContent =
+      "Pacote local " + (CID_META.version || "—") + " · " +
+      (CID_META.totalRecords || CID10.length).toLocaleString("pt-BR") +
+      " registros · sem consulta externa";
+
+    const escapeHTML = (value) => String(value ?? "").replace(/[&<>"']/g, c => ({
+      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+    })[c]);
+    function showError(target, message) {
+      target.innerHTML = '<span style="color:#fca5a5">' + escapeHTML(message) + '</span>';
+    }
+    const normalizeText = value => String(value ?? "").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().trim();
+    const normalizeCode = value => String(value ?? "").toUpperCase().replace(/[^A-Z0-9]/g,"");
+    const formatCode = code => code.length===4 ? code.slice(0,3)+"."+code.slice(3) : code;
+    function renderCID(records, messageIfEmpty) {
+      const output=$("cidResult");
+      if(!records.length){output.textContent=messageIfEmpty;return;}
+      output.innerHTML='<div class="muted">'+records.length+' resultado(s) encontrado(s) na base local</div>'+
+        records.map(([code,description])=>{
+          const meta=CID_META.codeMeta?.[code]||{};
+          return '<div class="item"><div class="code">'+escapeHTML(formatCode(code))+'</div><div>'+escapeHTML(description)+'</div><div class="muted">Fonte: '+escapeHTML(meta.source||"Fonte não identificada")+(meta.version?' · Versão: '+escapeHTML(meta.version):'')+'</div></div>';
+        }).join("");
+    }
+    function searchDescription() {
+      const q=$("cidQuery").value.trim();
+      if(q.length<2) return showError($("cidResult"),"Digite pelo menos 2 caracteres.");
+      const codeQuery=normalizeCode(q);
+      const textQuery=normalizeText(q);
+      const all=CID10.filter(([code,description])=>(codeQuery.length>=3 && code.startsWith(codeQuery)) || normalizeText(description).includes(textQuery));
+      renderCID(all.slice(0,5),"Nenhum resultado encontrado na base CID-10 local.");
+      if(all.length>5){const more=document.createElement("button");more.type="button";more.className="btn-secondary";more.textContent="Mostrar todos os "+all.length+" resultados";more.addEventListener("click",()=>renderCID(all,"Nenhum resultado encontrado."));$("cidResult").appendChild(more);}
+    }
+    function searchCode() {
+      const raw=$("cidCode").value.trim();
+      if(!raw) return showError($("cidResult"),"Digite um código CID.");
+      const code=normalizeCode(raw);
+      if(code.length<3 || code.length>4) return showError($("cidResult"),"Informe um código com 3 caracteres (ex.: A00) ou 4 (ex.: A00.0).");
+      const found=CID10.find(([itemCode])=>itemCode===code);
+      renderCID(found?[found]:[],"Código não encontrado nesta versão da base CID-10.");
+    }
+    $("searchText").addEventListener("click",searchDescription);
+    $("searchCode").addEventListener("click",searchCode);
+    $("cidQuery").addEventListener("keydown",e=>{if(e.key==="Enter")searchDescription();});
+    $("cidCode").addEventListener("keydown",e=>{if(e.key==="Enter")searchCode();});
+
+    $("calculate").addEventListener("click", () => {
+      const weight = Number($("weight").value);
+      const dose = Number($("dose").value);
+      const concentration = Number($("concentration").value);
+      const output = $("doseResult");
+
+      if (![weight, dose, concentration].every(Number.isFinite) ||
+          weight <= 0 || dose <= 0 || concentration <= 0) {
+        showError(output, "Preencha os três campos com números maiores que zero.");
+        return;
+      }
+
+      const totalMg = weight * dose;
+      const volumeMl = totalMg / concentration;
+
+      if (!Number.isFinite(totalMg) || !Number.isFinite(volumeMl)) {
+        showError(output, "Não foi possível calcular. Confira os valores.");
+        return;
+      }
+
+      output.innerHTML =
+        '<div class="muted">Resultado matemático — não é recomendação de dose</div>' +
+        '<p>Dose total calculada: <strong>' + totalMg.toLocaleString("pt-BR", {maximumFractionDigits: 4}) + ' mg</strong></p>' +
+        '<p>Concentração informada: <strong>' + concentration.toLocaleString("pt-BR") + ' mg/mL</strong></p>' +
+        '<div class="dose-value">' + volumeMl.toLocaleString("pt-BR", {maximumFractionDigits: 4}) + ' mL</div>';
+    });
+
+    // Facilitador de prescrição — dados mantidos apenas em memória nesta página.
+    const rxMedications = $("rxMedications");
+    const rxMessage = $("rxMessage");
+    let rxMedicationCount = 0;
+    const rxValue = id => $(id).value.trim();
+
+    function drugPresentationPicker(card,drug){
+      card.querySelector("[data-presentation-picker]")?.remove();
+      const wrap=document.createElement("div");
+      wrap.className="full";wrap.dataset.presentationPicker="1";
+      const label=document.createElement("label");label.textContent="Escolha a apresentação cadastrada";
+      const select=document.createElement("select");select.innerHTML='<option value="">Selecione a apresentação…</option>';
+      drug.items.forEach((item,index)=>{
+        const option=document.createElement("option");option.value=String(index);option.textContent=item[0];select.appendChild(option);
+      });
+      select.addEventListener("change",()=>{
+        const item=drug.items[Number(select.value)];
+        if(!item)return;
+        card.querySelector('[data-field="presentation"]').value=item[0];
+        card.querySelector('[data-field="form"]').value=item[1];
+        card.querySelector('[data-field="route"]').value=item[3];
+        // Concentração e forma são identificadas; dose/posologia/quantidade continuam sob decisão do prescritor.
+        card.querySelector('[data-field="dose"]').value="";
+        card.querySelector('[data-field="frequency"]').value="";
+        card.querySelector('[data-field="duration"]').value="";
+        card.querySelector('[data-field="quantity"]').value="";
+        $("rxPrint").disabled=true;$("rxPreview").innerHTML="";
+      });
+      wrap.append(label,select);
+      const grid=card.querySelector(".rx-grid");
+      grid.insertBefore(wrap,grid.children[1]);
+    }
+
+    function addRxMedication(){
+      const n = ++rxMedicationCount;
+      const card = document.createElement("div");
+      card.className = "med-card";
+      card.dataset.medication = "1";
+      card.innerHTML = '<div class="med-head"><strong>Medicamento '+n+'</strong><button type="button" class="remove-med">Remover</button></div>'+
+        '<div class="rx-grid">'+
+        '<div class="full catalog-wrap"><label>Buscar medicamento no catálogo local ou digitar manualmente</label><input data-field="name" class="rxCatalogSearch" placeholder="Digite: amoxicilina, dipirona, losartana..." autocomplete="off"><div class="catalog-results" hidden></div><div class="catalog-hint">Sugestões offline; selecione o princípio ativo e depois a apresentação. Você também pode digitar um item fora do catálogo.</div><div class="catalog-warning" data-catalog-warning></div></div>'+
+        '<div><label>Concentração / apresentação</label><input data-field="presentation" placeholder="Ex.: 500 mg, cápsula"></div>'+
+        '<div><label>Forma farmacêutica (opcional)</label><input data-field="form" placeholder="Ex.: cápsula"></div>'+
+        '<div><label>Dose por administração</label><input data-field="dose" placeholder="Preenchimento pelo prescritor"></div>'+
+        '<div><label>Via de administração</label><input data-field="route" placeholder="Preenchimento pelo prescritor"></div>'+
+        '<div><label>Frequência / horários</label><input data-field="frequency" placeholder="Definida pelo prescritor"></div>'+
+        '<div><label>Duração do tratamento</label><input data-field="duration" placeholder="Definida pelo prescritor"></div>'+
+        '<div><label>Quantidade a dispensar</label><input data-field="quantity" placeholder="Definida pelo prescritor"></div>'+
+        '<div class="full"><label>Orientações adicionais (opcional)</label><input data-field="instructions" placeholder="Orientações do prescritor"></div></div>';
+      card.querySelector(".remove-med").addEventListener("click",()=>{card.remove(); renumberRxMedications();});
+      const search=card.querySelector(".rxCatalogSearch");
+      const results=card.querySelector(".catalog-results");
+      const warning=card.querySelector("[data-catalog-warning]");
+      const catalog=Array.isArray(window.MEDICATION_CATALOG)?window.MEDICATION_CATALOG:[];
+      function showSuggestions(){
+        const q=normalizeText(search.value);
+        results.innerHTML="";
+        if(q.length<2){results.hidden=true;return;}
+        const matches=catalog.filter(drug=>normalizeText([drug.name,...(drug.aliases||[])].join(" ")).includes(q)).slice(0,12);
+        if(!matches.length){results.hidden=true;return;}
+        matches.forEach(drug=>{
+          const option=document.createElement("button");
+          option.type="button";option.className="catalog-option";
+          option.innerHTML=escapeHTML(drug.name)+'<small>'+drug.items.length+' apresentação(ões) · '+escapeHTML(drug.category)+'</small>';
+          option.addEventListener("click",()=>{
+            search.value=drug.name;
+            search.dataset.catalogId=drug.id;
+            warning.textContent=drug.category.toLowerCase().includes("antimicrobiano") || drug.category.toLowerCase().includes("controle especial")
+              ? "ATENÇÃO: "+drug.category+". Este módulo não emite o receituário específico. Não imprimir como receita simples."
+              : "Catálogo informativo: confirme apresentação, registro, bula e enquadramento sanitário antes de emitir.";
+            results.innerHTML="";
+            drugPresentationPicker(card,drug);
+          });
+          results.appendChild(option);
+        });
+        results.hidden=false;
+      }
+      search.addEventListener("input",()=>{delete search.dataset.catalogId;warning.textContent="";card.querySelector("[data-presentation-picker]")?.remove();showSuggestions();});
+      search.addEventListener("focus",showSuggestions);
+      search.addEventListener("keydown",e=>{if(e.key==="Escape")results.hidden=true;});
+      document.addEventListener("click",e=>{if(!card.contains(e.target))results.hidden=true;});
+      rxMedications.appendChild(card);
+      renumberRxMedications();
+    }
+    function renumberRxMedications(){
+      [...rxMedications.querySelectorAll(".med-card")].forEach((card,i)=>card.querySelector(".med-head strong").textContent="Medicamento "+(i+1));
+      $("rxPrint").disabled=true;
+      $("rxPreview").innerHTML="";
+    }
+    function rxEscape(value){return escapeHTML(value).replace(/\n/g,"<br>");}
+    function generatePrescription(){
+      const doctor=rxValue("rxDoctor"), crm=rxValue("rxCrm"), address=rxValue("rxClinicAddress");
+      const patient=rxValue("rxPatient");
+      const cards=[...rxMedications.querySelectorAll(".med-card")];
+      if(!doctor||!crm||!address||!patient||!cards.length){
+        rxMessage.textContent="Preencha nome, CRM/UF, endereço profissional, nome do paciente e ao menos um medicamento.";
+        $("rxPrint").disabled=true; return;
+      }
+      const meds=cards.map((card,i)=>Object.fromEntries([...card.querySelectorAll("[data-field]")].map(el=>[el.dataset.field,el.value.trim()])));
+      const restricted=cards.map(card=>{
+        const id=card.querySelector(".rxCatalogSearch")?.dataset.catalogId;
+        return id ? (window.MEDICATION_CATALOG||[]).find(drug=>drug.id===id) : null;
+      }).filter(drug=>drug && /antimicrobiano|controle especial/i.test(drug.category));
+      if(restricted.length){
+        rxMessage.textContent="Não é possível gerar este modelo simples: "+restricted.map(drug=>drug.name+" ("+drug.category+")").join("; ")+". Use o receituário específico exigido pela legislação e confira as regras vigentes.";
+        $("rxPrint").disabled=true; $("rxPreview").innerHTML=""; return;
+      }
+      if(cards.some(card=>card.querySelector(".rxCatalogSearch")?.dataset.catalogId && !card.querySelector('[data-field="presentation"]').value.trim())){
+        rxMessage.textContent="Selecione a apresentação do medicamento no catálogo antes de gerar a prévia.";
+        $("rxPrint").disabled=true; return;
+      }
+      if(meds.some(m=>!m.name||!m.dose||!m.route||!m.frequency||!m.duration||!m.quantity)){
+        rxMessage.textContent="Em cada medicamento, preencha nome, dose, via, frequência, duração e quantidade.";
+        $("rxPrint").disabled=true; return;
+      }
+      const date=new Date().toLocaleDateString("pt-BR");
+      const birth=rxValue("rxBirth");
+      const patientAge=calculateAge(birth);
+      const specialty=rxValue("rxSpecialty");
+      const phone=rxValue("rxPhone");
+      const cpf=rxValue("rxCpf");
+      const preview=$("rxPreview");
+      preview.innerHTML='<div class="rx-paper">'+
+        '<div class="rx-paper-head"><div><div class="rx-brand">FACILI-TA MED · RECEITUÁRIO</div><div class="rx-doctor-name">'+rxEscape(doctor)+'</div><div class="rx-doctor-meta"><strong>CRM:</strong> '+rxEscape(crm)+(specialty?' · '+rxEscape(specialty):'')+'<br>'+rxEscape(address)+(phone?'<br>Telefone: '+rxEscape(phone):'')+'</div></div><div class="rx-doc-date">EMISSÃO<br><strong>'+date+'</strong></div></div>'+
+        '<div class="rx-paper-title">RECEITA MÉDICA</div>'+
+        '<div class="rx-patient-box"><div class="rx-section-label">Paciente</div><div class="rx-patient-name">'+rxEscape(patient)+'</div><div class="rx-patient-meta">'+[birth?'Nascimento: '+birth.split("-").reverse().join("/"):'' ,patientAge!==null?'Idade: '+patientAge+' anos':''].filter(Boolean).map(rxEscape).join(' · ')+'</div></div>'+
+        '<div class="rx-prescription-label">Prescrição</div>'+
+        meds.map((m,i)=>'<div class="rx-drug"><div class="rx-drug-title">'+(i+1)+'. '+rxEscape(m.name)+'</div>'+(m.presentation?'<div class="rx-drug-presentation">'+rxEscape(m.presentation)+'</div>':'')+'<div class="rx-drug-details"><span><b>Dose:</b> '+rxEscape(m.dose)+'</span><span><b>Via:</b> '+rxEscape(m.route)+'</span><span><b>Frequência:</b> '+rxEscape(m.frequency)+'</span><span><b>Duração:</b> '+rxEscape(m.duration)+'</span><span><b>Quantidade:</b> '+rxEscape(m.quantity)+'</span></div>'+(m.instructions?'<div class="rx-drug-instructions"><b>Orientações:</b> '+rxEscape(m.instructions)+'</div>':'')+'</div>').join('')+
+        '<div class="rx-paper-footer"><div class="rx-clinic-foot">'+rxEscape(address)+(phone?'<br>Telefone: '+rxEscape(phone):'')+(cpf?'<br>CPF: '+rxEscape(cpf):'')+'</div><div class="rx-signature">'+rxEscape(doctor)+'<small>CRM: '+rxEscape(crm)+(phone?'<br>Telefone: '+rxEscape(phone):'')+(cpf?'<br>CPF: '+rxEscape(cpf):'')+'<br>Assinatura e carimbo</small></div></div>'+
+        '<div class="rx-paper-note">Documento gerado para conferência e assinatura manual do prescritor. Não possui assinatura eletrônica ou certificação digital.</div></div>'
+      $("rxPrint").disabled=false;
+      rxMessage.textContent="Prévia gerada. Confira todos os dados, a classificação do medicamento, a dose, a posologia e a quantidade antes de imprimir.";
+    }
+    rxMedications.addEventListener("input",()=>{ $("rxPrint").disabled=true; $("rxPreview").innerHTML=""; });
+    $("rxAddMedication").addEventListener("click",addRxMedication);
+    $("rxGenerate").addEventListener("click",generatePrescription);
+    $("rxPrint").addEventListener("click",()=>{if(!$("rxPrint").disabled)window.print();});
+    const PROFILE_KEY="facilita-med-doctor-profile-v1";
+    const profileFields=["rxDoctor","rxCrm","rxPhone","rxCpf","rxSpecialty","rxClinicAddress"];
+    function saveDoctorProfile(){const p=Object.fromEntries(profileFields.map(id=>[id,$(id).value.trim()]));if(!p.rxDoctor||!p.rxCrm||!p.rxPhone||!p.rxCpf){$("rxProfileStatus").textContent="Preencha nome, CRM, telefone e CPF para salvar o perfil.";return;}try{localStorage.setItem(PROFILE_KEY,JSON.stringify(p));$("rxProfileStatus").textContent="Perfil salvo neste navegador e dispositivo.";}catch(e){$("rxProfileStatus").textContent="Não foi possível salvar neste navegador.";} }
+    function loadDoctorProfile(){try{const p=JSON.parse(localStorage.getItem(PROFILE_KEY)||"null");if(p){profileFields.forEach(id=>$(id).value=p[id]||"");$("rxProfileStatus").textContent="Perfil profissional carregado do navegador.";}}catch(e){}}
+    function calculateAge(value){if(!value)return null;const d=new Date(value+"T00:00:00");if(Number.isNaN(d.getTime()))return null;const t=new Date();let age=t.getFullYear()-d.getFullYear();if(t.getMonth()<d.getMonth()||(t.getMonth()===d.getMonth()&&t.getDate()<d.getDate()))age--;return age>=0?age:null;}
+    function updatePatientAge(){const age=calculateAge(rxValue("rxBirth"));$("rxAge").value=age===null?"":age+" anos";$("rxPrint").disabled=true;$("rxPreview").innerHTML="";}
+    $("rxBirth").addEventListener("change",updatePatientAge);
+    $("rxSaveProfile").addEventListener("click",saveDoctorProfile);
+    $("rxEditProfile").addEventListener("click",()=>{$("rxProfileStatus").textContent="Edite os campos e salve novamente.";});
+    $("rxClearPatient").addEventListener("click",()=>{["rxPatient","rxBirth","rxAge"].forEach(id=>$(id).value="");$("rxPreview").innerHTML="";$("rxPrint").disabled=true;$("rxMessage").textContent="";});
+    ["rxDoctor","rxCrm","rxClinicAddress","rxPatient","rxBirth","rxAge","rxSpecialty","rxPhone","rxCpf"].forEach(id=>$(id).addEventListener("input",()=>{$("rxPrint").disabled=true;$("rxPreview").innerHTML="";}));
+    loadDoctorProfile();
+    function showSection(id){document.querySelectorAll(".tool-section").forEach(el=>el.hidden=el.id!==id);document.querySelectorAll(".nav-btn").forEach(b=>b.classList.toggle("active",b.dataset.section===id));window.scrollTo({top:0,behavior:"smooth"});}
+    document.querySelectorAll(".nav-btn").forEach(b=>b.addEventListener("click",()=>showSection(b.dataset.section)));
+    ["cidHome","doseHome","rxHome"].forEach(id=>$(id).addEventListener("click",()=>showSection("cidSection")));
+    $("cidClear").addEventListener("click",()=>{$("cidQuery").value="";$("cidCode").value="";$("cidResult").innerHTML="";});
+    $("doseClear").addEventListener("click",()=>{["weight","dose","concentration"].forEach(id=>$(id).value="");$("doseResult").innerHTML="";});
+    addRxMedication();
+
+  </script>
+</body>
+</html>
