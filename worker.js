@@ -5,7 +5,7 @@
  */
 const CID_API_BASE="https://southamerica-east1-no-api-br.cloudfunctions.net/apiCid";
 const ALLOWED=new Set(["https://dibairener-tech.github.io"]);
-const SESSION_SECONDS=604800,ITERATIONS=150000;
+const SESSION_SECONDS=604800,ITERATIONS=100000;
 const headers=o=>({"Access-Control-Allow-Origin":ALLOWED.has(o)?o:"https://dibairener-tech.github.io","Access-Control-Allow-Methods":"GET,POST,PUT,DELETE,OPTIONS","Access-Control-Allow-Headers":"Content-Type,Authorization","Access-Control-Max-Age":"86400","Vary":"Origin"});
 const json=(d,s=200,o="")=>new Response(JSON.stringify(d),{status:s,headers:{...headers(o),"Content-Type":"application/json; charset=utf-8","Cache-Control":"no-store"}});
 const error=(m,s,o,c="error")=>json({error:c,message:m},s,o);
