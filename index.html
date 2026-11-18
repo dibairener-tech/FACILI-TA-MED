@@ -59,7 +59,7 @@
         <button id="searchCode">Consultar código</button>
 
         <div id="cidResult" class="result" role="status" aria-live="polite"></div>
-        <p class="muted" id="cidVersion">Base local v2026.11 · carregando metadados…</p>
+        <p class="muted" id="cidVersion">Pacote local 2026.11 · carregando metadados…</p>
       </section>
 
       <section class="card">
@@ -94,7 +94,7 @@
     const CID_META = window.CID10_META || {};
     const versionLine = $("cidVersion");
     if (versionLine) versionLine.textContent =
-      "Base local v" + (CID_META.version || "—") + " · " +
+      "Pacote local " + (CID_META.version || "—") + " · " +
       (CID_META.totalRecords || CID10.length).toLocaleString("pt-BR") +
       " registros · sem consulta externa";
 
