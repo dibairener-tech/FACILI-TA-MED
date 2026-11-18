@@ -48,6 +48,58 @@ async function handler(req,env){
   if(!row||x.hash!==row.password_hash)return error("E-mail ou senha incorretos.",401,o,"invalid_credentials");
   await env.DB.prepare("DELETE FROM auth_attempts WHERE email=?").bind(email).run();const t=token(),exp=Math.floor(Date.now()/1000)+SESSION_SECONDS;await env.DB.prepare("INSERT INTO sessions(token_hash,doctor_id,expires_at) VALUES(?,?,?)").bind(await sha(t),row.id,exp).run();return json({token:t,expiresAt:exp},200,o);
  }
+
+ // Administração MASTER: autenticação e sessão independentes das contas médicas.
+ if(p==="/api/admin/login"&&req.method==="POST"){
+  const username=String(b.username||"").trim(),password=String(b.password||"");
+  if(!env.ADMIN_USERNAME||!env.ADMIN_PASSWORD)return error("Acesso MASTER ainda não configurado no Worker.",503,o,"admin_not_configured");
+  if(!username||!password)return error("Informe usuário e senha.",400,o);
+  if(await limited(env,"admin:"+username))return error("Muitas tentativas. Aguarde 15 minutos.",429,o,"rate_limited");
+  const [givenUser,expectedUser,givenPass,expectedPass]=await Promise.all([sha(username),sha(env.ADMIN_USERNAME),sha(password),sha(env.ADMIN_PASSWORD)]);
+  if(givenUser!==expectedUser||givenPass!==expectedPass)return error("Usuário ou senha inválidos.",401,o,"invalid_credentials");
+  await env.DB.prepare("DELETE FROM auth_attempts WHERE email=?").bind("admin:"+username).run();
+  const t=token(),exp=Math.floor(Date.now()/1000)+SESSION_SECONDS;
+  await env.DB.prepare("INSERT INTO admin_sessions(token_hash,expires_at) VALUES(?,?)").bind(await sha(t),exp).run();
+  return json({token:t,expiresAt:exp},200,o);
+ }
+ const adminToken=getToken(req);
+ const adminSession=adminToken?await env.DB.prepare("SELECT token_hash FROM admin_sessions WHERE token_hash=? AND expires_at>?").bind(await sha(adminToken),Math.floor(Date.now()/1000)).first():null;
+ if(p==="/api/admin/logout"&&req.method==="POST"){
+  if(adminToken)await env.DB.prepare("DELETE FROM admin_sessions WHERE token_hash=?").bind(await sha(adminToken)).run();
+  return json({ok:true},200,o);
+ }
+ if(p==="/api/admin/me"&&req.method==="GET"){
+  if(!adminSession)return error("Sessão MASTER inválida ou expirada.",401,o,"unauthorized");
+  return json({authenticated:true},200,o);
+ }
+ if(p.startsWith("/api/admin/")){
+  if(!adminSession)return error("Acesso MASTER não autorizado.",401,o,"unauthorized");
+  if(p==="/api/admin/doctors"&&req.method==="GET"){
+   const rows=await env.DB.prepare("SELECT id,email,doctor_name,crm,phone,cpf,specialty,clinic_address,created_at,updated_at,(SELECT COUNT(*) FROM prescriptions p WHERE p.doctor_id=doctors.id) AS recipes_count FROM doctors ORDER BY created_at DESC").all();
+   return json({doctors:rows.results||[]},200,o);
+  }
+  const am=p.match(/^\/api\/admin\/doctors\/([0-9a-f-]{36})$/i);
+  if(am&&req.method==="PUT"){
+   const id=am[1],email=String(b.email||"").trim().toLowerCase(),name=String(b.doctor_name||"").trim().slice(0,300),crm=String(b.crm||"").trim().slice(0,100);
+   if(!validEmail(email))return error("Informe um e-mail válido.",400,o);
+   try{
+    const result=await env.DB.prepare("UPDATE doctors SET email=?,doctor_name=?,crm=?,phone=?,cpf=?,specialty=?,clinic_address=?,updated_at=datetime('now') WHERE id=?").bind(email,name,crm,String(b.phone||"").trim().slice(0,100),String(b.cpf||"").trim().slice(0,100),String(b.specialty||"").trim().slice(0,200),String(b.clinic_address||"").trim().slice(0,300),id).run();
+    if(!result.meta?.changes)return error("Cadastro não encontrado.",404,o);
+    return json({ok:true},200,o);
+   }catch(err){if(/unique/i.test(err?.message||""))return error("Este e-mail já está em uso por outra conta.",409,o);throw err;}
+  }
+  if(am&&req.method==="DELETE"){
+   const exists=await env.DB.prepare("SELECT id FROM doctors WHERE id=?").bind(am[1]).first();
+   if(!exists)return error("Cadastro não encontrado.",404,o);
+   await env.DB.batch([
+    env.DB.prepare("DELETE FROM sessions WHERE doctor_id=?").bind(am[1]),
+    env.DB.prepare("DELETE FROM prescriptions WHERE doctor_id=?").bind(am[1]),
+    env.DB.prepare("DELETE FROM doctors WHERE id=?").bind(am[1])
+   ]);
+   return json({ok:true},200,o);
+  }
+  return error("Rota administrativa não encontrada.",404,o,"not_found");
+ }
  const doctor=await auth(req,env);
  if(p.startsWith("/api/")&&!doctor)return error("Sessão inválida ou expirada. Entre novamente.",401,o,"unauthorized");
  if(p==="/api/auth/me"&&req.method==="GET")return json({doctor},200,o);
