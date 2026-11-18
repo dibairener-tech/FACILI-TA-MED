@@ -59,3 +59,24 @@ Nenhum uso em produção antes de: confirmação oficial de homologação/creden
 ## Fonte técnica principal
 
 Anvisa, Instruções de apoio ao processo de integração — JUL/2026 — v1.0, especialmente seções 2 a 4. URL: https://www.gov.br/anvisa/pt-br/assuntos/medicamentos/controlados/sncr/documentos-do-sncr/instrucoes-de-integracao-api-sncr-v1-0.pdf
+
+
+## Implementação interna preparada (18/11/2026)
+
+A branch de desenvolvimento agora contém endpoints autenticados no Worker para:
+- `GET /api/electronic/settings` — carregar a configuração individual do profissional.
+- `PUT /api/electronic/settings` — salvar somente metadados públicos do certificado; o estado resultante é `declared_not_verified`, nunca "validado".
+- `POST /api/electronic/simulate` — executar teste interno no Worker, sem rede externa, número SNCR ou documento assinado.
+- `GET /api/electronic/events` — consultar os eventos técnicos do próprio profissional.
+
+A tela de Receita Eletrônica carrega esses dados ao autenticar e oferece registro dos metadados públicos do certificado. Não há upload de certificado, coleta de PIN/senha, assinatura ou comunicação com a API da Anvisa.
+
+### Para ativar os endpoints internos no ambiente FACILI-TA MED
+
+1. Revisar e mesclar o PR somente após revisão.
+2. Aplicar `electronic-prescriptions/migration.sql` no D1 `facilita-med-db` (binding `DB`) **antes** de implantar o Worker atualizado.
+3. Implantar o Worker atualizado.
+4. Validar primeiro com uma conta médica de teste e dados fictícios. Confirmar que as configurações e eventos de uma conta não aparecem em outra.
+5. Manter a integração SNCR desabilitada até obter confirmação oficial da URL de treinamento, fluxo Gov.br e especificação de assinatura.
+
+A validação sintática do Worker e dos dois scripts da página passou após as alterações. Isso não substitui testes de execução no Cloudflare/D1.
