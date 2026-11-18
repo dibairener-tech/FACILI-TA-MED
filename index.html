@@ -111,7 +111,10 @@
       const output=$("cidResult");
       if(!records.length){output.textContent=messageIfEmpty;return;}
       output.innerHTML='<div class="muted">'+records.length+' resultado(s) encontrado(s) na base local</div>'+
-        records.map(([code,description])=>'<div class="item"><div class="code">'+escapeHTML(formatCode(code))+'</div><div>'+escapeHTML(description)+'</div></div>').join("");
+        records.map(([code,description])=>{
+          const meta=CID_META.codeMeta?.[code]||{};
+          return '<div class="item"><div class="code">'+escapeHTML(formatCode(code))+'</div><div>'+escapeHTML(description)+'</div><div class="muted">Fonte: '+escapeHTML(meta.source||"Fonte não identificada")+(meta.version?' · Versão: '+escapeHTML(meta.version):'')+'</div></div>';
+        }).join("");
     }
     function searchDescription() {
       const q=$("cidQuery").value.trim();
