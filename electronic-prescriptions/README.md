@@ -53,3 +53,14 @@ A Anvisa informa que prescritores utilizam a plataforma de prescrição integrad
 - O login Gov.br de treinamento e a assinatura qualificada ICP-Brasil são requisitos distintos. Não tratar autenticação como assinatura.
 
 Consulte TEST-PLAN.md para o plano de testes exclusivamente fictícios e os bloqueios antes de qualquer chamada real.
+
+
+## Endpoints internos preparados nesta etapa
+
+Todos os endpoints abaixo exigem sessão FACILI-TA MED e obtêm o médico exclusivamente do token autenticado:
+- `GET /api/electronic/settings`: retorna metadados do certificado e estado da integração daquele médico.
+- `PUT /api/electronic/settings`: salva somente metadados públicos do certificado (titular, série, impressão digital e validade). Não aceita arquivo, PIN, senha ou chave privada.
+- `POST /api/electronic/simulate`: executa uma simulação no Worker, sem chamada externa, sem número oficial e sem documento assinado.
+- `GET /api/electronic/events`: lista eventos técnicos do próprio médico.
+
+A identificação do certificado fica marcada como **declarada, não verificada**. Não há integração SNCR real, autenticação Gov.br, assinatura ICP-Brasil, emissão ou validação de receita nesta etapa. A API oficial permanece desabilitada até a Anvisa confirmar URL de treinamento, credenciais de teste e fluxo técnico de assinatura.
