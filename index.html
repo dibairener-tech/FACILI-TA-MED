@@ -289,6 +289,7 @@
       $("rxPrint").disabled=false;
       rxMessage.textContent="Prévia gerada. Confira todos os dados, a classificação do medicamento, a dose, a posologia e a quantidade antes de imprimir.";
     }
+    rxMedications.addEventListener("input",()=>{ $("rxPrint").disabled=true; $("rxPreview").innerHTML=""; });
     $("rxAddMedication").addEventListener("click",addRxMedication);
     $("rxGenerate").addEventListener("click",generatePrescription);
     $("rxPrint").addEventListener("click",()=>{if(!$("rxPrint").disabled)window.print();});
