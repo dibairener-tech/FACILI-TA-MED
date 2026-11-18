@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow"><meta name="theme-color" content="#07110d">
+<title>MASTER · FACILI-TA MED</title>
+<style>
+:root{color-scheme:dark;--bg:#070d0a;--panel:#111d17;--line:#294334;--text:#edf7f0;--muted:#a8b9ad;--green:#34d399;--red:#fca5a5}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 50% 0%,#10291b,#070d0a 65%);font-family:Inter,system-ui,Arial,sans-serif;color:var(--text);min-height:100vh}
+header{padding:25px 18px;border-bottom:1px solid var(--line);background:#07110ddd;text-align:center}h1{margin:0;color:var(--green);letter-spacing:1.3px;font-size:clamp(23px,4vw,32px)}header p{margin:7px 0 0;color:var(--muted);font-size:13px}
+main{width:min(1100px,94%);margin:28px auto 60px}.panel{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:20px;box-shadow:0 14px 35px #0003}
+.login{max-width:430px;margin:7vh auto}.hidden{display:none!important}label{display:block;color:#c7d7ce;font-size:13px;margin:13px 0 6px}input{width:100%;padding:12px 13px;border:1px solid #3a5947;border-radius:9px;background:#0b1710;color:var(--text);font-size:15px}
+button{border:0;border-radius:9px;padding:11px 15px;background:linear-gradient(90deg,#047857,#10b981);color:white;font-weight:750;cursor:pointer}button:disabled{opacity:.55;cursor:wait}.secondary{background:#334a3b}.danger{background:#8b2525}.top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:16px}.top h2{margin:0}.tools{display:flex;gap:9px;flex-wrap:wrap}.tools input{width:min(330px,80vw)}.status{color:var(--muted);font-size:13px;line-height:1.5;margin-top:12px;min-height:18px}.stats{color:var(--muted);font-size:13px;margin:8px 0 15px}
+.table-wrap{overflow-x:auto}table{width:100%;border-collapse:collapse;min-width:680px}th,td{text-align:left;padding:12px 10px;border-bottom:1px solid var(--line);font-size:13px}th{color:var(--green);font-size:12px;text-transform:uppercase;letter-spacing:.5px}td small{display:block;color:var(--muted);margin-top:4px}.actions{display:flex;gap:7px}.actions button{padding:7px 10px;font-size:12px}.empty{text-align:center;color:var(--muted);padding:30px}
+#editPanel{margin-top:18px}.formgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 14px}.formgrid .full{grid-column:1/-1}.formactions{display:flex;gap:9px;flex-wrap:wrap;margin-top:16px}.formactions button{min-width:130px}
+@media(max-width:650px){.panel{padding:15px}.formgrid{grid-template-columns:1fr}.formgrid .full{grid-column:auto}}
+</style></head>
+<body>
+<header><h1>FACILI-TA MED · MASTER</h1><p>Área administrativa exclusiva do proprietário</p></header>
+<main>
+<section id="loginPanel" class="panel login"><h2>Acesso MASTER</h2><p style="color:var(--muted);font-size:13px">Entre com o usuário e a senha administrativa, separados das contas médicas.</p>
+<label for="username">Usuário MASTER</label><input id="username" autocomplete="username">
+<label for="password">Senha MASTER</label><input id="password" type="password" autocomplete="current-password">
+<button id="loginBtn" style="width:100%;margin-top:17px">Entrar no painel</button><div id="loginStatus" class="status" role="status"></div></section>
+<section id="adminPanel" class="hidden">
+<div class="panel"><div class="top"><h2>Cadastros de médicos</h2><div class="tools"><input id="search" placeholder="Buscar por nome, e-mail ou CRM"><button id="refreshBtn" class="secondary">Atualizar</button><button id="logoutBtn" class="secondary">Sair</button></div></div>
+<div id="stats" class="stats"></div><div class="table-wrap"><table><thead><tr><th>Médico</th><th>E-mail</th><th>CRM</th><th>Receitas</th><th>Cadastro</th><th>Ações</th></tr></thead><tbody id="doctorRows"></tbody></table></div><div id="listStatus" class="status" role="status"></div></div>
+<section id="editPanel" class="panel hidden"><div class="top"><h2>Editar cadastro</h2><button id="cancelEdit" class="secondary">Cancelar</button></div>
+<form id="editForm"><input type="hidden" id="editId"><div class="formgrid">
+<div class="full"><label for="editName">Nome do médico</label><input id="editName" maxlength="300"></div>
+<div><label for="editEmail">E-mail de acesso</label><input id="editEmail" type="email" maxlength="254" required></div>
+<div><label for="editCrm">CRM / UF</label><input id="editCrm" maxlength="100"></div>
+<div><label for="editPhone">Telefone</label><input id="editPhone" maxlength="100"></div>
+<div><label for="editCpf">CPF</label><input id="editCpf" maxlength="100"></div>
+<div><label for="editSpecialty">Especialidade</label><input id="editSpecialty" maxlength="200"></div>
+<div class="full"><label for="editAddress">Endereço profissional</label><input id="editAddress" maxlength="300"></div>
+</div><div class="formactions"><button id="saveBtn" type="submit">Salvar alterações</button><button id="cancelEdit2" type="button" class="secondary">Cancelar</button></div><div id="editStatus" class="status" role="status"></div></form></section>
+</section></main>
+<script>
+(()=>{const API="https://facilita-med-api.dibairener.workers.dev",KEY="facilitaMedMasterToken",el=id=>document.getElementById(id);let doctors=[];
+const token=()=>sessionStorage.getItem(KEY)||"";
+async function api(path,options={}){const headers={"Content-Type":"application/json",...(options.headers||{})};if(token())headers.Authorization="Bearer "+token();const r=await fetch(API+path,{...options,headers});let d={};try{d=await r.json()}catch{}if(!r.ok)throw Error(d.message||"Falha na comunicação com o servidor.");return d}
+function showLogin(message=""){el("loginPanel").classList.remove("hidden");el("adminPanel").classList.add("hidden");el("loginStatus").textContent=message}
+function showAdmin(){el("loginPanel").classList.add("hidden");el("adminPanel").classList.remove("hidden")}
+function safe(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+function date(v){if(!v)return "—";const d=new Date(v.replace(" ","T")+"Z");return isNaN(d)?"—":d.toLocaleDateString("pt-BR")}
+function render(){const q=el("search").value.trim().toLocaleLowerCase("pt-BR");const rows=doctors.filter(d=>[d.doctor_name,d.email,d.crm].join(" ").toLocaleLowerCase("pt-BR").includes(q));el("stats").textContent=doctors.length+" cadastro(s) no total · "+rows.length+" exibido(s)";el("doctorRows").innerHTML=rows.length?rows.map(d=>'<tr><td><strong>'+safe(d.doctor_name||"Nome não informado")+'</strong><small>'+safe(d.specialty||"")+'</small></td><td>'+safe(d.email)+'</td><td>'+safe(d.crm||"—")+'</td><td>'+Number(d.recipes_count||0)+'</td><td>'+date(d.created_at)+'</td><td><div class="actions"><button data-edit="'+safe(d.id)+'">Editar</button><button class="danger" data-delete="'+safe(d.id)+'">Excluir</button></div></td></tr>').join(""):'<tr><td colspan="6" class="empty">Nenhum cadastro encontrado.</td></tr>'}
+async function load(){el("listStatus").textContent="Carregando cadastros…";try{const d=await api("/api/admin/doctors");doctors=d.doctors||[];render();el("listStatus").textContent=""}catch(e){el("listStatus").textContent=e.message;if(/sessão|acesso master/i.test(e.message)){sessionStorage.removeItem(KEY);showLogin("Sua sessão MASTER expirou. Entre novamente.")}}}
+async function login(){const btn=el("loginBtn");btn.disabled=true;el("loginStatus").textContent="Autenticando…";try{const d=await api("/api/admin/login",{method:"POST",body:JSON.stringify({username:el("username").value.trim(),password:el("password").value})});sessionStorage.setItem(KEY,d.token);el("password").value="";showAdmin();await load()}catch(e){el("loginStatus").textContent=e.message}finally{btn.disabled=false}}
+function closeEdit(){el("editPanel").classList.add("hidden");el("editForm").reset();el("editId").value=""}
+function edit(id){const d=doctors.find(x=>x.id===id);if(!d)return;el("editId").value=d.id;el("editName").value=d.doctor_name||"";el("editEmail").value=d.email||"";el("editCrm").value=d.crm||"";el("editPhone").value=d.phone||"";el("editCpf").value=d.cpf||"";el("editSpecialty").value=d.specialty||"";el("editAddress").value=d.clinic_address||"";el("editStatus").textContent="";el("editPanel").classList.remove("hidden");el("editPanel").scrollIntoView({behavior:"smooth",block:"start"})}
+el("loginBtn").addEventListener("click",login);el("password").addEventListener("keydown",e=>{if(e.key==="Enter")login()});el("refreshBtn").addEventListener("click",load);el("search").addEventListener("input",render);el("cancelEdit").addEventListener("click",closeEdit);el("cancelEdit2").addEventListener("click",closeEdit);
+el("logoutBtn").addEventListener("click",async()=>{try{await api("/api/admin/logout",{method:"POST",body:"{}"})}catch{}sessionStorage.removeItem(KEY);closeEdit();showLogin("Você saiu do painel MASTER.")});
+el("doctorRows").addEventListener("click",async e=>{const b=e.target.closest("button");if(!b)return;if(b.dataset.edit)edit(b.dataset.edit);if(b.dataset.delete){const d=doctors.find(x=>x.id===b.dataset.delete);if(!d)return;if(!confirm("Excluir a conta de "+(d.doctor_name||d.email)+"?\n\nEsta ação também apagará todas as receitas salvas nessa conta e não poderá ser desfeita."))return;b.disabled=true;try{await api("/api/admin/doctors/"+encodeURIComponent(d.id),{method:"DELETE"});await load();closeEdit()}catch(err){el("listStatus").textContent=err.message}finally{b.disabled=false}}});
+el("editForm").addEventListener("submit",async e=>{e.preventDefault();const btn=el("saveBtn");btn.disabled=true;el("editStatus").textContent="Salvando…";const id=el("editId").value;const body={email:el("editEmail").value,doctor_name:el("editName").value,crm:el("editCrm").value,phone:el("editPhone").value,cpf:el("editCpf").value,specialty:el("editSpecialty").value,clinic_address:el("editAddress").value};try{await api("/api/admin/doctors/"+encodeURIComponent(id),{method:"PUT",body:JSON.stringify(body)});el("editStatus").textContent="Cadastro atualizado.";await load();closeEdit()}catch(err){el("editStatus").textContent=err.message}finally{btn.disabled=false}});
+async function init(){if(!token()){showLogin();return}try{await api("/api/admin/me");showAdmin();await load()}catch{sessionStorage.removeItem(KEY);showLogin("Entre com seu acesso MASTER.")}}init();
+})();
+</script></body></html>
