@@ -68,4 +68,4 @@ async function handler(req,env){
  if(m&&req.method==="DELETE"){const r=await env.DB.prepare("DELETE FROM prescriptions WHERE id=? AND doctor_id=?").bind(m[1],doctor.id).run();if(!r.meta?.changes)return error("Receita não encontrada.",404,o);return json({ok:true},200,o);}
  return error("Rota não encontrada.",404,o,"not_found");
 }
-export default {async fetch(req,env){try{return await handler(req,env);}catch{return json({error:"internal_error",message:"Erro interno. Tente novamente."},500,req.headers.get("Origin")||"");}}};
+export default {async fetch(req,env){try{return await handler(req,env);}catch(err){console.error("FACILITA_MED_WORKER_ERROR",JSON.stringify({path:new URL(req.url).pathname,method:req.method,name:err?.name||"Error",message:err?.message||String(err),stack:err?.stack||""}));return json({error:"internal_error",message:"Erro interno. Consulte os logs do Worker."},500,req.headers.get("Origin")||"");}}};
