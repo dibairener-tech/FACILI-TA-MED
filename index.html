@@ -48,7 +48,7 @@
     <div class="grid">
       <section class="card">
         <h2>Consulta CID</h2>
-        <p class="sub">Consulte CID-10 e CID-11 por código. A busca por descrição depende do plano contratado da API.</p>
+        <p class="sub">Consulte a base CID-10 diretamente no aplicativo, sem depender de API externa ou limite de consultas.</p>
 
         <label for="cidQuery">Pesquisar por doença ou descrição</label>
         <input id="cidQuery" type="search" placeholder="Ex.: diabetes (busca textual)">
@@ -59,7 +59,7 @@
         <button id="searchCode">Consultar código</button>
 
         <div id="cidResult" class="result" role="status" aria-live="polite"></div>
-        <p class="muted">Fonte de dados: API cid.api.br. Verifique a classificação e a versão aplicável ao seu contexto.</p>
+        <p class="muted">Base local: DATASUS CID-10 V2008 + códigos U07 da tabela SIM. A base não incorpora automaticamente todas as atualizações posteriores.</p>
       </section>
 
       <section class="card">
@@ -83,91 +83,51 @@
   </main>
 
   <footer>
+    Base CID-10: DATASUS V2008 + códigos U07/SIM · Projeto Brazilian Utils (MIT). Confira atualizações e a classificação vigente.<br>
     FACILI-TA MED · Criado por RENER DIBAI © 2026
   </footer>
 
+  <script src="cid-data.js"></script>
   <script>
-    // Depois de publicar o Worker, coloque aqui a URL dele.
-    const API_BASE = "https://facilita-med-api.dibairener.workers.dev";
-
     const $ = (id) => document.getElementById(id);
+    const CID10 = window.CID10_DATA || [];
     const escapeHTML = (value) => String(value ?? "").replace(/[&<>"']/g, c => ({
       "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
     })[c]);
-
     function showError(target, message) {
       target.innerHTML = '<span style="color:#fca5a5">' + escapeHTML(message) + '</span>';
     }
-
-    async function queryCID(params) {
-      const output = $("cidResult");
-      if (!API_BASE || API_BASE.includes("COLE_A_URL")) {
-        showError(output, "Configure a URL do Worker no início do JavaScript deste arquivo.");
-        return;
-      }
-
-      output.textContent = "Consultando a base CID...";
-      $("searchText").disabled = true;
-      $("searchCode").disabled = true;
-
-      try {
-        const response = await fetch(API_BASE + "/api/cid?" + new URLSearchParams(params));
-        const data = await response.json();
-
-        if (!response.ok) {
-          throw new Error(data.mensagem || data.message || data.erro || "Falha na consulta (HTTP " + response.status + ").");
-        }
-
-        const records = Array.isArray(data) ? data :
-          (data.resultados || data.results || data.items || data.data || null);
-
-        if (records && Array.isArray(records)) {
-          if (!records.length) {
-            output.textContent = "Nenhum resultado encontrado.";
-          } else {
-            output.innerHTML = records.map(item => {
-              const code = item.codigo || item.code || item.cid || "";
-              const desc = item.descricao || item.description || item.nome || item.name || "";
-              return '<div class="item"><div class="code">' + escapeHTML(code) + '</div><div>' + escapeHTML(desc) + '</div></div>';
-            }).join("");
-          }
-        } else {
-          const code = data.codigo || data.code || "";
-          const desc = data.descricao || data.description || data.nome || "";
-          if (code || desc) {
-            output.innerHTML = '<div class="code">' + escapeHTML(code) + '</div><div>' + escapeHTML(desc) + '</div>' +
-              (data.capituloDesc ? '<p class="muted">Capítulo: ' + escapeHTML(data.capituloDesc) + '</p>' : '') +
-              (data.grupoDesc ? '<p class="muted">Grupo: ' + escapeHTML(data.grupoDesc) + '</p>' : '');
-          } else {
-            output.textContent = JSON.stringify(data, null, 2);
-          }
-        }
-      } catch (error) {
-        showError(output, error.message || "Não foi possível consultar. Tente novamente.");
-      } finally {
-        $("searchText").disabled = false;
-        $("searchCode").disabled = false;
-      }
+    const normalizeText = value => String(value ?? "").normalize("NFD").replace(/[\\u0300-\\u036f]/g,"").toLowerCase().trim();
+    const normalizeCode = value => String(value ?? "").toUpperCase().replace(/[^A-Z0-9]/g,"");
+    const formatCode = code => code.length===4 ? code.slice(0,3)+"."+code.slice(3) : code;
+    function renderCID(records, messageIfEmpty) {
+      const output=$("cidResult");
+      if(!records.length){output.textContent=messageIfEmpty;return;}
+      output.innerHTML='<div class="muted">'+records.length+' resultado(s) encontrado(s) na base local</div>'+
+        records.map(([code,description])=>'<div class="item"><div class="code">'+escapeHTML(formatCode(code))+'</div><div>'+escapeHTML(description)+'</div></div>').join("");
     }
-
-    $("searchText").addEventListener("click", () => {
-      const q = $("cidQuery").value.trim();
-      if (q.length < 2) return showError($("cidResult"), "Digite pelo menos 2 caracteres.");
-      queryCID({ q });
-    });
-
-    $("searchCode").addEventListener("click", () => {
-      const code = $("cidCode").value.trim();
-      if (!code) return showError($("cidResult"), "Digite um código CID.");
-      queryCID({ code });
-    });
-
-    $("cidQuery").addEventListener("keydown", e => {
-      if (e.key === "Enter") $("searchText").click();
-    });
-    $("cidCode").addEventListener("keydown", e => {
-      if (e.key === "Enter") $("searchCode").click();
-    });
+    function searchDescription() {
+      const q=$("cidQuery").value.trim();
+      if(q.length<2) return showError($("cidResult"),"Digite pelo menos 2 caracteres.");
+      const codeQuery=normalizeCode(q);
+      const textQuery=normalizeText(q);
+      const results=CID10.filter(([code,description])=>
+        (codeQuery.length>=3 && code.startsWith(codeQuery)) || normalizeText(description).includes(textQuery)
+      ).slice(0,60);
+      renderCID(results,"Nenhum resultado encontrado na base CID-10 local.");
+    }
+    function searchCode() {
+      const raw=$("cidCode").value.trim();
+      if(!raw) return showError($("cidResult"),"Digite um código CID.");
+      const code=normalizeCode(raw);
+      if(code.length<3 || code.length>4) return showError($("cidResult"),"Informe um código com 3 caracteres (ex.: A00) ou 4 (ex.: A00.0).");
+      const found=CID10.find(([itemCode])=>itemCode===code);
+      renderCID(found?[found]:[],"Código não encontrado nesta versão da base CID-10.");
+    }
+    $("searchText").addEventListener("click",searchDescription);
+    $("searchCode").addEventListener("click",searchCode);
+    $("cidQuery").addEventListener("keydown",e=>{if(e.key==="Enter")searchDescription();});
+    $("cidCode").addEventListener("keydown",e=>{if(e.key==="Enter")searchCode();});
 
     $("calculate").addEventListener("click", () => {
       const weight = Number($("weight").value);
