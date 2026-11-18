@@ -106,6 +106,35 @@ async function handler(req,env){
  if(p==="/api/auth/logout"&&req.method==="POST"){const t=getToken(req);if(t)await env.DB.prepare("DELETE FROM sessions WHERE token_hash=?").bind(await sha(t)).run();return json({ok:true},200,o);}
  if(p==="/api/profile"&&req.method==="GET"){const profile=await env.DB.prepare("SELECT doctor_name,crm,phone,cpf,specialty,clinic_address FROM doctors WHERE id=?").bind(doctor.id).first();return json({profile},200,o);}
  if(p==="/api/profile"&&req.method==="PUT"){const f=["doctor_name","crm","phone","cpf","specialty","clinic_address"],v=f.map(k=>String(b[k]||"").trim().slice(0,300));if(!v[0]||!v[1])return error("Nome e CRM/UF são obrigatórios.",400,o);await env.DB.prepare("UPDATE doctors SET doctor_name=?,crm=?,phone=?,cpf=?,specialty=?,clinic_address=?,updated_at=datetime('now') WHERE id=?").bind(...v,doctor.id).run();return json({ok:true},200,o);}
+ if(p==="/api/electronic/settings"&&req.method==="GET"){
+  let settings=await env.DB.prepare("SELECT signature_method,certificate_subject,certificate_serial,certificate_fingerprint,certificate_valid_until,certificate_status,sncr_status,created_at,updated_at FROM doctor_electronic_settings WHERE doctor_id=?").bind(doctor.id).first();
+  if(!settings)settings={signature_method:"icp_brasil",certificate_subject:"",certificate_serial:"",certificate_fingerprint:"",certificate_valid_until:"",certificate_status:"not_configured",sncr_status:"not_connected"};
+  return json({settings,professional:{name:doctor.doctor_name||"",crm:doctor.crm||""},integration:{mode:"disabled",api_connected:false,official_issuance_enabled:false,reason:"Ambiente oficial de treinamento e fluxo de assinatura ainda aguardam confirmação técnica."}},200,o);
+ }
+ if(p==="/api/electronic/settings"&&req.method==="PUT"){
+  const subject=String(b.certificate_subject||"").trim().slice(0,300),serial=String(b.certificate_serial||"").trim().slice(0,160),fingerprint=String(b.certificate_fingerprint||"").replace(/[^a-fA-F0-9:]/g,"").slice(0,128),validUntil=String(b.certificate_valid_until||"").slice(0,10);
+  if(!doctor.doctor_name||!doctor.crm)return error("Complete primeiro seu nome e CRM no perfil profissional.",400,o);
+  if(validUntil&&!/^\\d{4}-\\d{2}-\\d{2}$/.test(validUntil))return error("Data de validade do certificado inválida.",400,o);
+  if([subject,serial,fingerprint,validUntil].some(v=>v.length>0)&&(!subject||!serial||!fingerprint||!validUntil))return error("Para registrar os metadados, preencha titular, número de série, impressão digital e validade.",400,o);
+  const certStatus=subject&&serial&&fingerprint&&validUntil?"declared_not_verified":"not_configured";
+  await env.DB.prepare("INSERT INTO doctor_electronic_settings(doctor_id,signature_method,certificate_subject,certificate_serial,certificate_fingerprint,certificate_valid_until,certificate_status,sncr_status,updated_at) VALUES(?,'icp_brasil',?,?,?,?,?,'not_connected',datetime('now')) ON CONFLICT(doctor_id) DO UPDATE SET certificate_subject=excluded.certificate_subject,certificate_serial=excluded.certificate_serial,certificate_fingerprint=excluded.certificate_fingerprint,certificate_valid_until=excluded.certificate_valid_until,certificate_status=excluded.certificate_status,updated_at=datetime('now')").bind(doctor.id,subject,serial,fingerprint,validUntil,certStatus).run();
+  return json({ok:true,certificate_status:certStatus,sncr_status:"not_connected"},200,o);
+ }
+ if(p==="/api/electronic/simulate"&&req.method==="POST"){
+  const id=crypto.randomUUID(),details={mode:"simulation",external_request:false,official_number_created:false,document_signed:false};
+  await env.DB.prepare("INSERT INTO electronic_prescription_events(id,doctor_id,prescription_id,event_type,event_details) VALUES(?,?,NULL,'internal_simulation',?)").bind(id,doctor.id,JSON.stringify(details)).run();
+  return json({ok:true,simulation:true,legal_validity:false,steps:[
+   {status:"passed",message:"Sessão autenticada e vinculada ao profissional."},
+   {status:"passed",message:"Isolamento por doctor_id confirmado no servidor."},
+   {status:"passed",message:"Nenhuma chamada externa ao SNCR foi realizada."},
+   {status:"passed",message:"Nenhum número oficial foi solicitado ou criado."},
+   {status:"passed",message:"Nenhum certificado, PIN ou chave privada foi acessado."}
+  ],message:"SIMULAÇÃO — NÃO É RECEITA. A API oficial e a assinatura ainda não foram conectadas."},200,o);
+ }
+ if(p==="/api/electronic/events"&&req.method==="GET"){
+  const rows=await env.DB.prepare("SELECT id,event_type,event_details,created_at FROM electronic_prescription_events WHERE doctor_id=? ORDER BY created_at DESC LIMIT 50").bind(doctor.id).all();
+  return json({events:rows.results||[]},200,o);
+ }
  if(p==="/api/recipes"&&req.method==="GET"){
   const q=(u.searchParams.get("q")||"").trim().slice(0,100),from=(u.searchParams.get("from")||"").slice(0,10),to=(u.searchParams.get("to")||"").slice(0,10);let sql="SELECT id,patient_name,patient_birth,issued_at,created_at FROM prescriptions WHERE doctor_id=?",a=[doctor.id];
   if(q){sql+=" AND patient_name LIKE ?";a.push("%"+q.replace(/[%_\\]/g,"\\$&")+"%");}if(from){sql+=" AND issued_at>=?";a.push(from);}if(to){sql+=" AND issued_at<=?";a.push(to);}sql+=" ORDER BY issued_at DESC,created_at DESC LIMIT 300";const rows=await env.DB.prepare(sql).bind(...a).all();return json({recipes:rows.results||[]},200,o);
