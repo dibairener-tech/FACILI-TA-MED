@@ -18,7 +18,7 @@
     main{width:min(940px,92%);margin:28px auto 50px}
     .intro{color:var(--muted);text-align:center;margin:0 auto 22px;max-width:700px;line-height:1.55}
     .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
-    .main-nav{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:0 0 20px}.nav-btn{margin:0;background:#13251b;border:1px solid var(--line);color:var(--muted);padding:13px 8px}.nav-btn.active{background:linear-gradient(90deg,#047857,#10b981);color:#fff;border-color:#10b981}.tool-section[hidden]{display:none!important}.section-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}.section-head h2{margin:0}.section-actions{display:flex;gap:8px;flex-wrap:wrap}.section-actions button{width:auto;margin:0;padding:9px 12px;font-size:12px}.profile-box{padding:13px;border:1px solid var(--line);border-radius:12px;background:#0b1911;margin-bottom:16px}.profile-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 16px}.profile-status{font-size:12px;color:var(--green);margin-top:8px}@media(max-width:720px){.main-nav{gap:6px}.nav-btn{font-size:12px;padding:12px 5px}.section-head{align-items:flex-start;flex-direction:column}.profile-grid{grid-template-columns:1fr}}
+    .main-nav{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:0 0 20px}.nav-btn{margin:0;background:#13251b;border:1px solid var(--line);color:var(--muted);padding:13px 8px}.nav-btn.active{background:linear-gradient(90deg,#047857,#10b981);color:#fff;border-color:#10b981}.tool-section[hidden]{display:none!important}.section-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}.section-head h2{margin:0}.section-actions{display:flex;gap:8px;flex-wrap:wrap}.section-actions button{width:auto;margin:0;padding:9px 12px;font-size:12px}.profile-box{padding:13px;border:1px solid var(--line);border-radius:12px;background:#0b1911;margin-bottom:16px}.profile-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 16px}.profile-status{font-size:12px;color:var(--green);margin-top:8px}@media(max-width:720px){.main-nav{gap:6px}.nav-btn{font-size:12px;padding:12px 5px}.section-head{align-items:flex-start;flex-direction:column}.profile-grid{grid-template-columns:1fr}}
     .card{background:linear-gradient(155deg,var(--panel),#101c2e);border:1px solid var(--line);border-radius:17px;padding:22px;box-shadow:0 14px 35px #0003}
     h2{font-size:21px;margin:0 0 8px}
     .sub{color:var(--muted);font-size:13px;line-height:1.5;margin:0 0 17px}
@@ -140,7 +140,7 @@
   </div>
 </section>
 <nav class="main-nav" aria-label="Seções do aplicativo">
-<button type="button" class="nav-btn active" data-section="cidSection">Consulta CID</button><button type="button" class="nav-btn" data-section="doseSection">Calculadora</button><button type="button" class="nav-btn" data-section="prescriptionModule">Receitas</button></nav>
+<button type="button" class="nav-btn active" data-section="cidSection">Consulta CID</button><button type="button" class="nav-btn" data-section="doseSection">Calculadora</button><button type="button" class="nav-btn" data-section="prescriptionModule">Receitas</button><button type="button" class="nav-btn" data-section="electronicPrescriptionSection">Receita eletrônica</button></nav>
 <section class="tool-section" id="cidSection"><div class="section-head"><h2>Consulta CID</h2><div class="section-actions"><button type="button" class="btn-secondary" id="cidClear">Limpar</button><button type="button" class="btn-secondary" id="cidHome">Início</button></div></div><section class="card">
         <h2>Consulta CID</h2>
         <p class="sub">Consulte a base CID-10 diretamente no aplicativo, sem depender de API externa ou limite de consultas.</p>
@@ -214,6 +214,28 @@
       <div class="rx-legal"><strong>Importante — escopo desta versão:</strong> o catálogo é uma referência local inicial, não uma base regulatória completa. Antimicrobianos e medicamentos sujeitos a controle especial exibem alerta e não devem ser emitidos neste modelo simples. O sistema não valida registro ativo, disponibilidade, bula, dose ou adequação clínica. O prescritor deve confirmar a classificação e as regras vigentes. O documento precisa ser conferido, datado e assinado; não é receita eletrônica assinada digitalmente nem substitui os receituários e sistemas oficiais.</div>
       <div id="prescriptionPrint" class="print-only"><div id="rxPreview" class="rx-preview"></div></div>
     </section>
+<section class="card wide tool-section" id="electronicPrescriptionSection" hidden>
+  <div class="section-head"><h2>Receita eletrônica</h2><div class="section-actions"><button type="button" class="btn-secondary" id="electronicProfileRefresh">Atualizar dados</button><button type="button" class="btn-secondary" id="electronicHome">Início</button></div></div>
+  <p class="sub">Área individual do profissional para preparar a emissão eletrônica integrada ao SNCR. Cada médico utilizará sua própria identificação e seu próprio certificado digital.</p>
+  <div class="profile-box">
+    <h3>Identificação do prescritor</h3>
+    <div class="profile-grid">
+      <div><label>Profissional</label><input id="electronicDoctorName" readonly></div>
+      <div><label>Conselho / registro</label><input id="electronicDoctorCrm" readonly></div>
+    </div>
+    <div class="profile-status" id="electronicIdentityStatus">Entre na sua conta para carregar seus dados profissionais.</div>
+  </div>
+  <div class="grid">
+    <div class="med-card"><h3>Certificado digital</h3><p class="sub">Assinatura qualificada ICP-Brasil do próprio médico. A chave privada não será enviada nem armazenada no FACILI-TA MED.</p><strong id="electronicCertificateStatus">Ainda não configurado</strong></div>
+    <div class="med-card"><h3>Integração SNCR</h3><p class="sub">Conexão do serviço de prescrição à API oficial da Anvisa, com numeração e modelos oficiais conforme o tipo de receituário.</p><strong id="electronicSncrStatus">Integração ainda não habilitada</strong></div>
+  </div>
+  <div class="notice">Esta área está em preparação. Ainda não emite receitas eletrônicas oficiais, não solicita numeração ao SNCR e não realiza assinatura digital. Não utilize esta tela para prescrever medicamentos controlados. A emissão real só será habilitada após integração homologada/testada conforme os requisitos oficiais.</div>
+  <div class="rx-actions">
+    <button type="button" class="btn-secondary" id="electronicAnvisaDocs">Documentação oficial da Anvisa</button>
+    <button type="button" class="btn-secondary" id="electronicSncrStatusLink">Situação do SNCR</button>
+  </div>
+  <div class="result" id="electronicModuleStatus" role="status">Entre na sua conta FACILI-TA MED para visualizar sua identificação profissional.</div>
+</section>
 </main>
 
   <footer>
@@ -451,7 +473,7 @@
     loadDoctorProfile();
     function showSection(id){document.querySelectorAll(".tool-section").forEach(el=>el.hidden=el.id!==id);document.querySelectorAll(".nav-btn").forEach(b=>b.classList.toggle("active",b.dataset.section===id));window.scrollTo({top:0,behavior:"smooth"});}
     document.querySelectorAll(".nav-btn").forEach(b=>b.addEventListener("click",()=>showSection(b.dataset.section)));
-    ["cidHome","doseHome","rxHome"].forEach(id=>$(id).addEventListener("click",()=>showSection("cidSection")));
+    ["cidHome","doseHome","rxHome","electronicHome"].forEach(id=>$(id).addEventListener("click",()=>showSection("cidSection")));
     $("cidClear").addEventListener("click",()=>{$("cidQuery").value="";$("cidCode").value="";$("cidResult").innerHTML="";});
     $("doseClear").addEventListener("click",()=>{["weight","dose","concentration"].forEach(id=>$(id).value="");$("doseResult").innerHTML="";});
     addRxMedication();
@@ -481,8 +503,18 @@
       $a("profileEditor").hidden=false;
       $a("rxProfileStatus").textContent="Cadastre os dados profissionais desta conta.";
     }
+    function refreshElectronicIdentity() {
+      const name=$a("electronicDoctorName"),crm=$a("electronicDoctorCrm"),identity=$a("electronicIdentityStatus"),status=$a("electronicModuleStatus");
+      if(!name||!crm||!identity||!status)return;
+      if(!currentDoctor){name.value="";crm.value="";identity.textContent="Entre na sua conta para carregar seus dados profissionais.";status.textContent="A área eletrônica é individual e exige autenticação.";return;}
+      name.value=currentDoctor.doctor_name||"";
+      crm.value=currentDoctor.crm||"";
+      identity.textContent=(currentDoctor.doctor_name&&currentDoctor.crm)?"Identificação carregada da conta médica.":"Complete seu nome e CRM no perfil profissional antes de configurar a emissão.";
+      status.textContent="Conta autenticada. A assinatura e a integração oficial ainda não estão habilitadas.";
+    }
     function showAccount(doctor) {
       currentDoctor=doctor||null;
+      refreshElectronicIdentity();
       $a("signedOutPanel").hidden=!!doctor;
       $a("signedInPanel").hidden=!doctor;
       if(doctor) $a("accountIdentity").textContent=doctor.doctor_name||doctor.email||"Conta conectada";
@@ -526,6 +558,14 @@
       } catch(e){setStatus(e.message);}
       finally{btn.disabled=false;}
     }
+    $a("electronicProfileRefresh").addEventListener("click",async()=>{
+      if(!token()){refreshElectronicIdentity();return;}
+      try{const d=await api("/api/auth/me");currentDoctor=d.doctor;refreshElectronicIdentity();}
+      catch(e){$a("electronicModuleStatus").textContent="Não foi possível atualizar a identificação: "+e.message;}
+    });
+    $a("electronicHome").addEventListener("click",()=>document.querySelector('[data-section="cidSection"]').click());
+    $a("electronicAnvisaDocs").addEventListener("click",()=>window.open("https://www.gov.br/anvisa/pt-br/assuntos/medicamentos/controlados/sncr/documentos-do-sncr","_blank","noopener"));
+    $a("electronicSncrStatusLink").addEventListener("click",()=>window.open("https://www.gov.br/anvisa/pt-br/assuntos/medicamentos/controlados/sncr/situacao-do-sncr-ocorrencias-e-orientacoes","_blank","noopener"));
     $a("accountLogin").addEventListener("click",()=>authenticate("login"));
     $a("accountRegister").addEventListener("click",()=>authenticate("register"));
     $a("accountPassword").addEventListener("keydown",e=>{if(e.key==="Enter")authenticate("login");});
