@@ -246,7 +246,7 @@
     <h3>Laboratório de testes — modo simulado</h3>
     <p class="sub">Testes locais do fluxo da aplicação. Não acessa a Anvisa, não usa dados de prescritor ou paciente, não gera numeração SNCR e não assina documentos.</p>
     <div class="rx-actions">
-      <button type="button" class="btn-secondary" id="electronicRunSimulation" disabled>Executar teste simulado</button>
+      <button type="button" class="btn-secondary" id="electronicRunSimulation">Executar teste simulado</button>
     </div>
     <div class="result" id="electronicSimulationResult" role="status" aria-live="polite">Aguardando execução. Os resultados serão identificados como SIMULAÇÃO.</div>
   </div>
@@ -582,7 +582,24 @@
       $a("electronicCertificateSaveStatus").textContent="A configuração individual será habilitada após a preparação das rotas no Worker de produção. Nenhum dado foi enviado.";
     });
     $a("electronicRunSimulation").addEventListener("click",()=>{
-      $a("electronicSimulationResult").textContent="O laboratório de simulação será habilitado em uma atualização futura. Nenhuma chamada externa foi realizada.";
+      const result=$a("electronicSimulationResult");
+      const btn=$a("electronicRunSimulation");
+      btn.disabled=true;
+      btn.textContent="Executando simulação...";
+      result.textContent="Executando verificações locais de demonstração...";
+      window.setTimeout(()=>{
+        const when=new Date().toLocaleString("pt-BR");
+        result.textContent=
+          "✓ SIMULAÇÃO CONCLUÍDA — "+when+"\n\n"+
+          "✓ Interface do módulo: OK\n"+
+          "✓ Fluxo de preparação: OK (demonstração)\n"+
+          "✓ Comunicação externa: NÃO REALIZADA\n"+
+          "✓ Certificado digital / assinatura: NÃO UTILIZADOS\n"+
+          "✓ SNCR / Anvisa / numeração oficial: NÃO ACESSADOS\n\n"+
+          "Este resultado é fictício e serve somente para apresentação. Nenhuma receita foi emitida, enviada, assinada ou armazenada.";
+        btn.disabled=false;
+        btn.textContent="Executar teste simulado novamente";
+      },650);
     });
     $a("electronicProfileRefresh").addEventListener("click",async()=>{
       if(!token()){refreshElectronicIdentity();return;}
