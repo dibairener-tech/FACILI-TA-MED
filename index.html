@@ -341,6 +341,18 @@
         $("rxPrint").disabled=true; return;
       }
       const meds=cards.map((card,i)=>Object.fromEntries([...card.querySelectorAll("[data-field]")].map(el=>[el.dataset.field,el.value.trim()])));
+      const restricted=cards.map(card=>{
+        const id=card.querySelector(".rxCatalogSearch")?.dataset.catalogId;
+        return id ? (window.MEDICATION_CATALOG||[]).find(drug=>drug.id===id) : null;
+      }).filter(drug=>drug && /antimicrobiano|controle especial/i.test(drug.category));
+      if(restricted.length){
+        rxMessage.textContent="Não é possível gerar este modelo simples: "+restricted.map(drug=>drug.name+" ("+drug.category+")").join("; ")+". Use o receituário específico exigido pela legislação e confira as regras vigentes.";
+        $("rxPrint").disabled=true; $("rxPreview").innerHTML=""; return;
+      }
+      if(cards.some(card=>card.querySelector(".rxCatalogSearch")?.dataset.catalogId && !card.querySelector('[data-field="presentation"]').value.trim())){
+        rxMessage.textContent="Selecione a apresentação do medicamento no catálogo antes de gerar a prévia.";
+        $("rxPrint").disabled=true; return;
+      }
       if(meds.some(m=>!m.name||!m.dose||!m.route||!m.frequency||!m.duration||!m.quantity)){
         rxMessage.textContent="Em cada medicamento, preencha nome, dose, via, frequência, duração e quantidade.";
         $("rxPrint").disabled=true; return;
