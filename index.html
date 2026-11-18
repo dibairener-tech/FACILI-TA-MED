@@ -175,14 +175,17 @@
       </section></section><section class="card wide tool-section" id="prescriptionModule" hidden>
       <div class="section-head"><h2>Receitas</h2><div class="section-actions"><button type="button" class="btn-secondary" id="rxClearPatient">Limpar paciente</button><button type="button" class="btn-secondary" id="rxHome">Início</button></div></div>
 <p class="sub">Salve seu perfil profissional neste navegador. Nas próximas receitas, basta informar o nome e a data de nascimento do paciente.</p>
-<div class="profile-box"><h3>Perfil do médico</h3><div class="profile-grid">
+<div class="profile-box"><h3>Perfil do médico</h3>
+<div id="profileSummary" hidden><p id="profileSummaryText" class="muted" style="line-height:1.6;margin:8px 0 12px"></p><button type="button" id="rxEditProfileSummary" class="btn-secondary" style="width:auto">Editar dados profissionais</button></div>
+<div id="profileEditor"><div class="profile-grid">
 <div><label for="rxDoctor">Nome completo</label><input id="rxDoctor" autocomplete="name" placeholder="Nome do médico"></div>
 <div><label for="rxCrm">CRM / UF</label><input id="rxCrm" placeholder="Ex.: CRM-SP 123456"></div>
 <div><label for="rxPhone">Telefone</label><input id="rxPhone" placeholder="Telefone profissional"></div>
 <div><label for="rxCpf">CPF</label><input id="rxCpf" inputmode="numeric" placeholder="000.000.000-00"></div>
 <div><label for="rxSpecialty">Especialidade (opcional)</label><input id="rxSpecialty" placeholder="Especialidade"></div>
 <div class="full"><label for="rxClinicAddress">Endereço profissional</label><input id="rxClinicAddress" placeholder="Rua, número, complemento, cidade/UF, CEP"></div>
-</div><div class="rx-actions"><button type="button" id="rxSaveProfile">Salvar perfil do médico</button><button type="button" id="rxEditProfile" class="btn-secondary">Editar perfil</button></div><div id="rxProfileStatus" class="profile-status">Perfil ainda não salvo neste navegador.</div></div>
+</div><div class="rx-actions"><button type="button" id="rxSaveProfile">Salvar perfil do médico</button><button type="button" id="rxEditProfile" class="btn-secondary">Cancelar edição</button></div></div>
+<div id="rxProfileStatus" class="profile-status">Perfil profissional ainda não salvo.</div></div>
 
 <div class="history-box" id="recipeHistory">
   <div class="section-head"><h3>Histórico de receitas</h3><button type="button" id="historyRefresh" class="btn-secondary" style="width:auto;margin:0">Atualizar</button></div>
@@ -488,6 +491,7 @@
         $a("rxProfileStatus").textContent="Perfil profissional carregado da nuvem.";
         if(p.doctor_name) currentDoctor.doctor_name=p.doctor_name;
         $a("accountIdentity").textContent=p.doctor_name||currentDoctor.email;
+        if(p.doctor_name&&p.crm) collapseProfile();
       } catch(e) { setStatus("Conta conectada, mas não foi possível carregar o perfil: "+e.message); }
     }
     async function refreshSession() {
@@ -520,9 +524,19 @@
     $a("rxSaveProfile").addEventListener("click",async()=>{
       if(!token())return;
       const body={doctor_name:$a("rxDoctor").value.trim(),crm:$a("rxCrm").value.trim(),phone:$a("rxPhone").value.trim(),cpf:$a("rxCpf").value.trim(),specialty:$a("rxSpecialty").value.trim(),clinic_address:$a("rxClinicAddress").value.trim()};
-      try{await api("/api/profile",{method:"PUT",body:JSON.stringify(body)});$a("rxProfileStatus").textContent="Perfil profissional salvo na nuvem.";$a("accountIdentity").textContent=body.doctor_name;}
+      try{await api("/api/profile",{method:"PUT",body:JSON.stringify(body)});$a("rxProfileStatus").textContent="Perfil profissional salvo na nuvem.";$a("accountIdentity").textContent=body.doctor_name;collapseProfile();}
       catch(e){$a("rxProfileStatus").textContent="Falha ao salvar na nuvem: "+e.message;}
     });
+    function collapseProfile(){
+      const values=[$a("rxDoctor").value.trim(),$a("rxCrm").value.trim(),$a("rxSpecialty").value.trim(),$a("rxPhone").value.trim(),$a("rxClinicAddress").value.trim()];
+      $a("profileSummaryText").textContent=[values[0],values[1],values[2],values[3],values[4]].filter(Boolean).join(" · ");
+      $a("profileEditor").hidden=true;$a("profileSummary").hidden=false;
+    }
+    function expandProfile(){
+      $a("profileSummary").hidden=true;$a("profileEditor").hidden=false;
+    }
+    $a("rxEditProfile").addEventListener("click",expandProfile);
+    $a("rxEditProfileSummary").addEventListener("click",expandProfile);
     function collectPrescription() {
       const cards=[...document.querySelectorAll("#rxMedications .med-card")];
       const medications=cards.map(card=>Object.fromEntries([...card.querySelectorAll("[data-field]")].map(el=>[el.dataset.field,el.value.trim()])));
