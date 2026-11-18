@@ -589,14 +589,17 @@
       result.textContent="Executando verificações locais de demonstração...";
       window.setTimeout(()=>{
         const when=new Date().toLocaleString("pt-BR");
-        result.textContent=
-          "✓ SIMULAÇÃO CONCLUÍDA — "+when+"\n\n"+
-          "✓ Interface do módulo: OK\n"+
-          "✓ Fluxo de preparação: OK (demonstração)\n"+
-          "✓ Comunicação externa: NÃO REALIZADA\n"+
-          "✓ Certificado digital / assinatura: NÃO UTILIZADOS\n"+
-          "✓ SNCR / Anvisa / numeração oficial: NÃO ACESSADOS\n\n"+
-          "Este resultado é fictício e serve somente para apresentação. Nenhuma receita foi emitida, enviada, assinada ou armazenada.";
+        result.innerHTML=
+          '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px">'+
+            '<span style="display:inline-flex;align-items:center;gap:7px;background:#123b2c;color:#86efac;border:1px solid #236b4b;border-radius:20px;padding:6px 11px;font-weight:700;font-size:13px"><span style="width:9px;height:9px;border-radius:50%;background:#22c55e;display:inline-block"></span> SIMULAÇÃO CONCLUÍDA</span>'+
+            '<span class="muted">'+when+'</span>'+
+          '</div>'+
+          '<div class="item"><span style="color:#22c55e;font-weight:700">●</span> Interface do módulo <strong style="color:#86efac">OK</strong></div>'+
+          '<div class="item"><span style="color:#22c55e;font-weight:700">●</span> Fluxo de preparação <strong style="color:#86efac">OK</strong> <span class="muted">(demonstração)</span></div>'+
+          '<div class="item"><span style="color:#22c55e;font-weight:700">●</span> Comunicação externa <strong>NÃO REALIZADA</strong></div>'+
+          '<div class="item"><span style="color:#22c55e;font-weight:700">●</span> Certificado digital / assinatura <strong>NÃO UTILIZADOS</strong></div>'+
+          '<div class="item"><span style="color:#22c55e;font-weight:700">●</span> SNCR / Anvisa / numeração oficial <strong>NÃO ACESSADOS</strong></div>'+
+          '<div style="margin-top:13px;padding:11px 12px;border-radius:9px;background:#17263a;border:1px solid #30445e;font-size:12px;line-height:1.5"><strong style="color:#fbbf24">MODO DE DEMONSTRAÇÃO</strong><br>Resultado fictício para apresentação. Nenhuma receita foi emitida, enviada, assinada ou armazenada.</div>';
         btn.disabled=false;
         btn.textContent="Executar teste simulado novamente";
       },650);
