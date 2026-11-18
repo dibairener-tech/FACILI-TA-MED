@@ -3,15 +3,15 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#10243a">
-  <meta name="description" content="FACILI-TA MED — consulta CID e calculadora de doses para apoio profissional.">
+  <meta name="theme-color" content="#07110d">
+  <meta name="description" content="FACILI-TA MED — consulta CID, cálculos de doses e facilitador de prescrição.">
   <title>FACILI-TA MED</title>
   <style>
-    :root{color-scheme:dark;--bg:#0b1220;--panel:#142238;--panel2:#0f1b2e;--line:#263b55;--text:#edf5ff;--muted:#a7b8cc;--blue:#38bdf8;--green:#34d399;--red:#fca5a5}
+    :root{color-scheme:dark;--bg:#070d0a;--panel:#111d17;--panel2:#0c1711;--line:#263c30;--text:#edf7f0;--muted:#a8b9ad;--blue:#34d399;--green:#34d399;--red:#fca5a5}
     *{box-sizing:border-box}
-    body{margin:0;background:radial-gradient(ellipse at top,#17304b 0,#0b1220 55%);font-family:Inter,system-ui,-apple-system,Segoe UI,Arial,sans-serif;color:var(--text);min-height:100vh}
-    header{padding:34px 18px 25px;text-align:center;border-bottom:1px solid var(--line);background:#0c192b}
-    .brand{font-size:clamp(27px,5vw,38px);font-weight:850;letter-spacing:1.4px;color:var(--blue);margin:0}
+    body{margin:0;position:relative;background:radial-gradient(ellipse at 50% 0%,#10291b 0,#070d0a 58%);font-family:Inter,system-ui,-apple-system,Segoe UI,Arial,sans-serif;color:var(--text);min-height:100vh;isolation:isolate}\n    body::before{content:"⚕";position:fixed;z-index:-1;pointer-events:none;right:-.08em;top:13vh;font-family:Arial,sans-serif;font-size:clamp(300px,58vw,760px);line-height:1;color:#34d399;opacity:.045;transform:rotate(-9deg)}\n    header,main,footer{position:relative;z-index:1}
+    header{padding:34px 18px 25px;text-align:center;border-bottom:1px solid var(--line);background:rgba(7,17,12,.78);backdrop-filter:blur(8px)}
+    .brand{font-size:clamp(27px,5vw,38px);font-weight:850;letter-spacing:1.4px;color:var(--green);margin:0}
     header p{margin:9px 0 0;color:var(--muted);font-size:14px}
     main{width:min(940px,92%);margin:28px auto 50px}
     .intro{color:var(--muted);text-align:center;margin:0 auto 22px;max-width:700px;line-height:1.55}
@@ -22,7 +22,7 @@
     label{display:block;font-size:13px;color:#c7d7e9;margin:13px 0 6px}
     input,select{width:100%;padding:13px 14px;border:1px solid #3a506b;border-radius:10px;background:var(--panel2);color:var(--text);font-size:15px;outline:none}
     input:focus,select:focus{border-color:var(--blue);box-shadow:0 0 0 3px #38bdf822}
-    button{width:100%;border:0;border-radius:10px;padding:13px 16px;margin-top:13px;background:linear-gradient(90deg,#0284c7,#0ea5e9);color:white;font-size:15px;font-weight:750;cursor:pointer}
+    button{width:100%;border:0;border-radius:10px;padding:13px 16px;margin-top:13px;background:linear-gradient(90deg,#047857,#10b981);color:white;font-size:15px;font-weight:750;cursor:pointer}
     button:disabled{opacity:.6;cursor:wait}
     .result{margin-top:16px;padding:14px;border-radius:11px;background:#0a1728;border:1px solid var(--line);line-height:1.55;overflow-wrap:anywhere}
     .result:empty{display:none}
@@ -103,7 +103,7 @@
 <body>
   <header>
     <h1 class="brand">FACILI-TA MED</h1>
-    <p>Consulta CID e cálculos de doses</p>
+    <p>Consulta CID e cálculos de doses, prescrição</p>
   </header>
 
   <main>
