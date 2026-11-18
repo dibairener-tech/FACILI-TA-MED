@@ -97,7 +97,7 @@
     function showError(target, message) {
       target.innerHTML = '<span style="color:#fca5a5">' + escapeHTML(message) + '</span>';
     }
-    const normalizeText = value => String(value ?? "").normalize("NFD").replace(/[\\u0300-\\u036f]/g,"").toLowerCase().trim();
+    const normalizeText = value => String(value ?? "").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().trim();
     const normalizeCode = value => String(value ?? "").toUpperCase().replace(/[^A-Z0-9]/g,"");
     const formatCode = code => code.length===4 ? code.slice(0,3)+"."+code.slice(3) : code;
     function renderCID(records, messageIfEmpty) {
