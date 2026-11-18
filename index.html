@@ -230,6 +230,14 @@
     <div class="med-card"><h3>Integração SNCR</h3><p class="sub">Conexão do serviço de prescrição à API oficial da Anvisa, com numeração e modelos oficiais conforme o tipo de receituário.</p><strong id="electronicSncrStatus">Integração ainda não habilitada</strong></div>
   </div>
   <div class="notice">Esta área está em preparação. Ainda não emite receitas eletrônicas oficiais, não solicita numeração ao SNCR e não realiza assinatura digital. Não utilize esta tela para prescrever medicamentos controlados. A emissão real só será habilitada após integração homologada/testada conforme os requisitos oficiais.</div>
+  <div class="profile-box">
+    <h3>Laboratório de testes — modo simulado</h3>
+    <p class="sub">Testes locais do fluxo da aplicação. Não acessa a Anvisa, não usa dados de prescritor ou paciente, não gera numeração SNCR e não assina documentos.</p>
+    <div class="rx-actions">
+      <button type="button" class="btn-secondary" id="electronicRunSimulation">Executar teste simulado</button>
+    </div>
+    <div class="result" id="electronicSimulationResult" role="status" aria-live="polite">Aguardando execução. Os resultados serão identificados como SIMULAÇÃO.</div>
+  </div>
   <div class="rx-actions">
     <button type="button" class="btn-secondary" id="electronicAnvisaDocs">Documentação oficial da Anvisa</button>
     <button type="button" class="btn-secondary" id="electronicSncrStatusLink">Situação do SNCR</button>
@@ -558,6 +566,17 @@
       } catch(e){setStatus(e.message);}
       finally{btn.disabled=false;}
     }
+    $a("electronicRunSimulation").addEventListener("click",()=>{
+      const output=$a("electronicSimulationResult");
+      const steps=[
+        ["PASSOU","Isolamento do modo de teste: nenhuma chamada externa foi realizada."],
+        ["PASSOU","Identificação fictícia: não foi solicitado CRM, CPF ou dado de médico real."],
+        ["PASSOU","Numeração: nenhum número SNCR foi solicitado ou criado."],
+        ["PASSOU","Assinatura: nenhuma chave, certificado ou PIN foi acessado."],
+        ["PASSOU","Documento: nenhum receituário foi emitido ou gerado."]
+      ];
+      output.innerHTML='<strong>SIMULAÇÃO — SEM VALIDADE LEGAL</strong><div class="item">'+steps.map(([status,label])=>'<div><strong style="color:#34d399">'+status+'</strong> · '+escapeHTML(label)+'</div>').join("")+'</div><div class="muted">Resultado: fluxo básico de isolamento aprovado. Isto não testa a API da Anvisa, autenticação Gov.br nem assinatura ICP-Brasil.</div>';
+    });
     $a("electronicProfileRefresh").addEventListener("click",async()=>{
       if(!token()){refreshElectronicIdentity();return;}
       try{const d=await api("/api/auth/me");currentDoctor=d.doctor;refreshElectronicIdentity();}
