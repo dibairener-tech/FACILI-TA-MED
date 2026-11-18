@@ -28,6 +28,9 @@ A interface informa essas limitações para impedir que uma prévia seja confund
 6. Separar emissão simples em PDF de receituário eletrônico oficial integrado ao SNCR.
 7. Antes de produção: revisar documentação, termos de acesso, ambiente de treinamento, requisitos de homologação, regras de cada tipo de receituário, LGPD e controles de auditoria.
 
+## Testes SNCR
+Consulte [`TESTING.md`](./TESTING.md) para o plano de testes em três fases: simulador isolado, ambiente oficial de treinamento e validação de assinatura. A documentação da Anvisa confirma o ambiente SNCR de treinamento e descreve cadastro com Gov.br de treinamento, mas exige inscrição profissional ativa para concluir o cadastro do prescritor. Não há, no material consultado, confirmação de certificado ICP-Brasil fictício fornecido pela Anvisa. Sem prescritor de teste autorizado, a validação real da API fica limitada; usaremos simulação claramente identificada, sem validade legal.
+
 ## Migração D1
 `migration.sql` é uma proposta ainda não aplicada. Não executar no D1 de produção até a implementação dos endpoints, revisão técnica e aprovação explícita.
 
