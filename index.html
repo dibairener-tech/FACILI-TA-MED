@@ -474,24 +474,37 @@
       if(!response.ok) throw new Error(data.message||"Falha na comunicação com o servidor.");
       return data;
     }
+    function resetProfessionalProfile() {
+      ["rxDoctor","rxCrm","rxPhone","rxCpf","rxSpecialty","rxClinicAddress"].forEach(id=>{$a(id).value="";});
+      $a("profileSummaryText").textContent="";
+      $a("profileSummary").hidden=true;
+      $a("profileEditor").hidden=false;
+      $a("rxProfileStatus").textContent="Cadastre os dados profissionais desta conta.";
+    }
     function showAccount(doctor) {
       currentDoctor=doctor||null;
       $a("signedOutPanel").hidden=!!doctor;
       $a("signedInPanel").hidden=!doctor;
       if(doctor) $a("accountIdentity").textContent=doctor.doctor_name||doctor.email||"Conta conectada";
       $a("rxSaveCloud").disabled=!doctor;
-      if(doctor) loadCloudProfile();
+      if(doctor) { resetProfessionalProfile(); loadCloudProfile(); }
+      else resetProfessionalProfile();
     }
     async function loadCloudProfile() {
       try {
         const data=await api("/api/profile");
         const p=data.profile||{};
         const map={rxDoctor:"doctor_name",rxCrm:"crm",rxPhone:"phone",rxCpf:"cpf",rxSpecialty:"specialty",rxClinicAddress:"clinic_address"};
-        Object.entries(map).forEach(([id,key])=>{if(p[key]) $a(id).value=p[key];});
-        $a("rxProfileStatus").textContent="Perfil profissional carregado da nuvem.";
+        Object.entries(map).forEach(([id,key])=>{$a(id).value=p[key]||"";});
         if(p.doctor_name) currentDoctor.doctor_name=p.doctor_name;
         $a("accountIdentity").textContent=p.doctor_name||currentDoctor.email;
-        if(p.doctor_name&&p.crm) collapseProfile();
+        if(p.doctor_name&&p.crm) {
+          $a("rxProfileStatus").textContent="Perfil profissional carregado da nuvem.";
+          collapseProfile();
+        } else {
+          $a("rxProfileStatus").textContent="Cadastre os dados profissionais desta conta.";
+          expandProfile();
+        }
       } catch(e) { setStatus("Conta conectada, mas não foi possível carregar o perfil: "+e.message); }
     }
     async function refreshSession() {
