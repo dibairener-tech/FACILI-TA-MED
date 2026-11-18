@@ -101,6 +101,19 @@
     .catalog-warning{font-size:11px;color:#fbbf24;margin-top:5px;line-height:1.4}
     .catalog-status{font-size:11px;color:var(--muted);margin-top:12px}
 
+
+    .account-panel{margin:0 0 18px;padding:18px;border:1px solid var(--line);border-radius:15px;background:rgba(11,25,17,.96)}
+    .account-panel h2{margin-bottom:6px}.account-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 14px}
+    .account-actions{display:flex;gap:9px;flex-wrap:wrap}.account-actions button{width:auto;flex:1;min-width:130px}
+    .account-status{font-size:12px;color:var(--muted);margin-top:10px;line-height:1.5}
+    .account-user{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+    .history-box{margin:18px 0;padding:15px;border:1px solid var(--line);border-radius:12px;background:#0b1911}
+    .history-filters{display:grid;grid-template-columns:2fr 1fr 1fr;gap:8px}
+    .history-row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--line)}
+    .history-row:last-child{border-bottom:0}.history-actions{display:flex;gap:6px;flex-wrap:wrap}
+    .history-actions button{width:auto;margin:0;padding:8px 10px;font-size:12px}
+    .btn-danger{background:#7f1d1d}
+    @media(max-width:720px){.account-grid,.history-filters{grid-template-columns:1fr}.history-row{align-items:flex-start;flex-direction:column}}
   </style>
 </head>
 <body>
@@ -110,6 +123,22 @@
   </header>
 
   <main>
+
+<section class="account-panel" id="accountPanel">
+  <div id="signedOutPanel">
+    <h2>Conta FACILI-TA MED</h2>
+    <p class="sub">Entre ou crie sua conta gratuita para salvar seu perfil profissional e suas receitas na nuvem.</p>
+    <div class="account-grid">
+      <div><label for="accountEmail">E-mail</label><input id="accountEmail" type="email" autocomplete="username" placeholder="seu@email.com"></div>
+      <div><label for="accountPassword">Senha</label><input id="accountPassword" type="password" autocomplete="current-password" minlength="12" placeholder="Mínimo de 12 caracteres"></div>
+    </div>
+    <div class="account-actions"><button type="button" id="accountLogin">Entrar</button><button type="button" id="accountRegister" class="btn-secondary">Criar conta grátis</button></div>
+    <div class="account-status" id="accountStatus" role="status">As receitas continuam disponíveis para impressão; o salvamento na nuvem exige uma conta.</div>
+  </div>
+  <div id="signedInPanel" hidden>
+    <div class="account-user"><div><strong id="accountIdentity">Conectado</strong><div class="account-status">Conta conectada. Seus dados de nuvem ficam vinculados a esta conta.</div></div><button type="button" id="accountLogout" class="btn-secondary" style="width:auto;margin:0">Sair</button></div>
+  </div>
+</section>
 <nav class="main-nav" aria-label="Seções do aplicativo">
 <button type="button" class="nav-btn active" data-section="cidSection">Consulta CID</button><button type="button" class="nav-btn" data-section="doseSection">Calculadora</button><button type="button" class="nav-btn" data-section="prescriptionModule">Receitas</button></nav>
 <section class="tool-section" id="cidSection"><div class="section-head"><h2>Consulta CID</h2><div class="section-actions"><button type="button" class="btn-secondary" id="cidClear">Limpar</button><button type="button" class="btn-secondary" id="cidHome">Início</button></div></div><section class="card">
@@ -154,6 +183,18 @@
 <div><label for="rxSpecialty">Especialidade (opcional)</label><input id="rxSpecialty" placeholder="Especialidade"></div>
 <div class="full"><label for="rxClinicAddress">Endereço profissional</label><input id="rxClinicAddress" placeholder="Rua, número, complemento, cidade/UF, CEP"></div>
 </div><div class="rx-actions"><button type="button" id="rxSaveProfile">Salvar perfil do médico</button><button type="button" id="rxEditProfile" class="btn-secondary">Editar perfil</button></div><div id="rxProfileStatus" class="profile-status">Perfil ainda não salvo neste navegador.</div></div>
+
+<div class="history-box" id="recipeHistory">
+  <div class="section-head"><h3>Histórico de receitas</h3><button type="button" id="historyRefresh" class="btn-secondary" style="width:auto;margin:0">Atualizar</button></div>
+  <p class="muted">As receitas salvas ficam vinculadas à sua conta e não são compartilhadas com outros usuários.</p>
+  <div class="history-filters">
+    <input id="historyQuery" type="search" placeholder="Buscar paciente">
+    <input id="historyFrom" type="date" aria-label="Data inicial">
+    <input id="historyTo" type="date" aria-label="Data final">
+  </div>
+  <button type="button" id="historySearch" class="btn-secondary">Pesquisar histórico</button>
+  <div id="historyResults" class="result" aria-live="polite">Entre na sua conta para consultar o histórico.</div>
+</div>
 <div class="rx-grid"><div class="full"><h3>Identificação do paciente</h3></div>
 <div class="full"><label for="rxPatient">Nome completo</label><input id="rxPatient" autocomplete="name" placeholder="Nome completo do paciente"></div>
 <div><label for="rxBirth">Data de nascimento</label><input id="rxBirth" type="date"></div>
@@ -163,7 +204,7 @@
       <div class="catalog-status">Catálogo local inicial: 25 princípios ativos, com apresentações de referência. Não é uma lista completa de todos os medicamentos registrados no Brasil; a inclusão no catálogo não confirma registro ativo ou disponibilidade comercial.</div>
       <div class="rx-actions">
         <button type="button" id="rxAddMedication" class="btn-secondary">+ Adicionar medicamento</button>
-        <button type="button" id="rxGenerate">Gerar prévia da receita</button>
+        <button type="button" id="rxGenerate">Gerar prévia da receita</button><button type="button" id="rxSaveCloud" class="btn-secondary" disabled>Salvar no histórico</button>
         <button type="button" id="rxPrint" class="btn-secondary" disabled>Imprimir / Salvar PDF</button>
       </div>
       <div id="rxMessage" class="result" role="status" aria-live="polite"></div>
@@ -412,6 +453,143 @@
     $("doseClear").addEventListener("click",()=>{["weight","dose","concentration"].forEach(id=>$(id).value="");$("doseResult").innerHTML="";});
     addRxMedication();
 
+
+  </script>
+  <script>
+  (() => {
+    const API_BASE = "https://facilita-med-api.dibairener.workers.dev";
+    const TOKEN_KEY = "facilitaMedSessionToken";
+    const $a = id => document.getElementById(id);
+    let currentDoctor = null;
+    const token = () => sessionStorage.getItem(TOKEN_KEY) || "";
+    const setStatus = message => { const el=$a("accountStatus"); if(el) el.textContent=message; };
+    async function api(path, options={}) {
+      const headers={"Content-Type":"application/json",...(options.headers||{})};
+      if(token()) headers.Authorization="Bearer "+token();
+      const response=await fetch(API_BASE+path,{...options,headers});
+      let data={}; try{data=await response.json();}catch{}
+      if(!response.ok) throw new Error(data.message||"Falha na comunicação com o servidor.");
+      return data;
+    }
+    function showAccount(doctor) {
+      currentDoctor=doctor||null;
+      $a("signedOutPanel").hidden=!!doctor;
+      $a("signedInPanel").hidden=!doctor;
+      if(doctor) $a("accountIdentity").textContent=doctor.doctor_name||doctor.email||"Conta conectada";
+      $a("rxSaveCloud").disabled=!doctor;
+      if(doctor) loadCloudProfile();
+    }
+    async function loadCloudProfile() {
+      try {
+        const data=await api("/api/profile");
+        const p=data.profile||{};
+        const map={rxDoctor:"doctor_name",rxCrm:"crm",rxPhone:"phone",rxCpf:"cpf",rxSpecialty:"specialty",rxClinicAddress:"clinic_address"};
+        Object.entries(map).forEach(([id,key])=>{if(p[key]) $a(id).value=p[key];});
+        $a("rxProfileStatus").textContent="Perfil profissional carregado da nuvem.";
+        if(p.doctor_name) currentDoctor.doctor_name=p.doctor_name;
+        $a("accountIdentity").textContent=p.doctor_name||currentDoctor.email;
+      } catch(e) { setStatus("Conta conectada, mas não foi possível carregar o perfil: "+e.message); }
+    }
+    async function refreshSession() {
+      if(!token()){showAccount(null);return;}
+      try { const data=await api("/api/auth/me"); showAccount(data.doctor); setStatus("Sessão ativa."); await loadHistory(); }
+      catch {sessionStorage.removeItem(TOKEN_KEY);showAccount(null);setStatus("Sua sessão expirou. Entre novamente.");}
+    }
+    async function authenticate(mode) {
+      const email=$a("accountEmail").value.trim(),password=$a("accountPassword").value;
+      if(!email||!password){setStatus("Informe e-mail e senha.");return;}
+      if(mode==="register"&&password.length<12){setStatus("A senha precisa ter pelo menos 12 caracteres.");return;}
+      const btn=$a(mode==="login"?"accountLogin":"accountRegister");btn.disabled=true;
+      try {
+        const data=await api("/api/auth/"+mode,{method:"POST",body:JSON.stringify({email,password})});
+        sessionStorage.setItem(TOKEN_KEY,data.token);
+        const me=await api("/api/auth/me");showAccount(me.doctor);
+        setStatus(mode==="register"?"Conta criada com sucesso. Complete seu perfil profissional.":"Login realizado com sucesso.");
+        await loadHistory();
+      } catch(e){setStatus(e.message);}
+      finally{btn.disabled=false;}
+    }
+    $a("accountLogin").addEventListener("click",()=>authenticate("login"));
+    $a("accountRegister").addEventListener("click",()=>authenticate("register"));
+    $a("accountPassword").addEventListener("keydown",e=>{if(e.key==="Enter")authenticate("login");});
+    $a("accountLogout").addEventListener("click",async()=>{
+      try{await api("/api/auth/logout",{method:"POST",body:"{}"});}catch{}
+      sessionStorage.removeItem(TOKEN_KEY);showAccount(null);setStatus("Você saiu da sua conta.");
+      $a("historyResults").textContent="Entre na sua conta para consultar o histórico.";
+    });
+    $a("rxSaveProfile").addEventListener("click",async()=>{
+      if(!token())return;
+      const body={doctor_name:$a("rxDoctor").value.trim(),crm:$a("rxCrm").value.trim(),phone:$a("rxPhone").value.trim(),cpf:$a("rxCpf").value.trim(),specialty:$a("rxSpecialty").value.trim(),clinic_address:$a("rxClinicAddress").value.trim()};
+      try{await api("/api/profile",{method:"PUT",body:JSON.stringify(body)});$a("rxProfileStatus").textContent="Perfil profissional salvo na nuvem.";$a("accountIdentity").textContent=body.doctor_name;}
+      catch(e){$a("rxProfileStatus").textContent="Falha ao salvar na nuvem: "+e.message;}
+    });
+    function collectPrescription() {
+      const cards=[...document.querySelectorAll("#rxMedications .med-card")];
+      const medications=cards.map(card=>Object.fromEntries([...card.querySelectorAll("[data-field]")].map(el=>[el.dataset.field,el.value.trim()])));
+      return {
+        doctor:{name:$a("rxDoctor").value.trim(),crm:$a("rxCrm").value.trim(),phone:$a("rxPhone").value.trim(),cpf:$a("rxCpf").value.trim(),specialty:$a("rxSpecialty").value.trim(),clinic_address:$a("rxClinicAddress").value.trim()},
+        patient:{name:$a("rxPatient").value.trim(),birth:$a("rxBirth").value},
+        medications
+      };
+    }
+    $a("rxSaveCloud").addEventListener("click",async()=>{
+      if(!token()){setStatus("Entre na sua conta para salvar receitas.");return;}
+      if($a("rxPrint").disabled||!$a("rxPreview").innerHTML.trim()){ $a("rxMessage").textContent="Gere e confira a prévia da receita antes de salvar.";return;}
+      const payload=collectPrescription();
+      const btn=$a("rxSaveCloud");btn.disabled=true;
+      try{
+        await api("/api/recipes",{method:"POST",body:JSON.stringify({patient_name:payload.patient.name,patient_birth:payload.patient.birth,issued_at:new Date().toISOString().slice(0,10),payload})});
+        $a("rxMessage").textContent="Receita salva no histórico da sua conta.";
+        await loadHistory();
+      }catch(e){$a("rxMessage").textContent="Não foi possível salvar: "+e.message;}
+      finally{btn.disabled=!currentDoctor;}
+    });
+    async function loadHistory() {
+      if(!token()){$a("historyResults").textContent="Entre na sua conta para consultar o histórico.";return;}
+      const params=new URLSearchParams();
+      if($a("historyQuery").value.trim())params.set("q",$a("historyQuery").value.trim());
+      if($a("historyFrom").value)params.set("from",$a("historyFrom").value);
+      if($a("historyTo").value)params.set("to",$a("historyTo").value);
+      const out=$a("historyResults");out.textContent="Carregando histórico…";
+      try{
+        const data=await api("/api/recipes?"+params.toString());
+        const rows=data.recipes||[];
+        if(!rows.length){out.textContent="Nenhuma receita encontrada.";return;}
+        out.innerHTML=rows.map(r=>'<div class="history-row"><div><strong>'+escapeHTML(r.patient_name)+'</strong><div class="muted">Emissão: '+escapeHTML(r.issued_at||"—")+'</div></div><div class="history-actions"><button type="button" data-open="'+escapeHTML(r.id)+'">Abrir</button><button type="button" class="btn-danger" data-delete="'+escapeHTML(r.id)+'">Excluir</button></div></div>').join("");
+      }catch(e){out.textContent="Erro ao carregar histórico: "+e.message;}
+    }
+    async function openRecipe(id) {
+      try{
+        const data=await api("/api/recipes/"+encodeURIComponent(id)),p=data.recipe.payload||{};
+        const d=p.doctor||{},patient=p.patient||{};
+        const map={rxDoctor:"name",rxCrm:"crm",rxPhone:"phone",rxCpf:"cpf",rxSpecialty:"specialty",rxClinicAddress:"clinic_address"};
+        Object.entries(map).forEach(([field,key])=>$a(field).value=d[key]||"");
+        $a("rxPatient").value=patient.name||data.recipe.patient_name||"";
+        $a("rxBirth").value=patient.birth||data.recipe.patient_birth||"";
+        $a("rxBirth").dispatchEvent(new Event("change"));
+        $a("rxMedications").innerHTML="";
+        (p.medications||[]).forEach(m=>{
+          $a("rxAddMedication").click();
+          const card=$a("rxMedications").lastElementChild;
+          [...card.querySelectorAll("[data-field]")].forEach(el=>{el.value=m[el.dataset.field]||"";});
+        });
+        $a("rxGenerate").click();
+        document.querySelector('[data-section="prescriptionModule"]').click();
+        $a("rxMessage").textContent="Receita carregada do histórico. Confira os dados antes de imprimir.";
+      }catch(e){$a("historyResults").textContent="Não foi possível abrir a receita: "+e.message;}
+    }
+    $a("historyResults").addEventListener("click",async e=>{
+      const open=e.target.closest("[data-open]"),del=e.target.closest("[data-delete]");
+      if(open)await openRecipe(open.dataset.open);
+      if(del&&confirm("Excluir esta receita do seu histórico? Esta ação não pode ser desfeita.")){
+        try{await api("/api/recipes/"+encodeURIComponent(del.dataset.delete),{method:"DELETE"});await loadHistory();}
+        catch(err){$a("historyResults").textContent="Não foi possível excluir: "+err.message;}
+      }
+    });
+    $a("historyRefresh").addEventListener("click",loadHistory);
+    $a("historySearch").addEventListener("click",loadHistory);
+    refreshSession();
+  })();
   </script>
 </body>
 </html>
