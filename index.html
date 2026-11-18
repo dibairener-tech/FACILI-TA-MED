@@ -34,6 +34,40 @@
     .dose-value{font-size:23px;font-weight:850;color:var(--green)}
     footer{text-align:center;color:var(--muted);font-size:12px;padding:24px 15px;border-top:1px solid var(--line)}
     @media(max-width:720px){.grid{grid-template-columns:1fr}.card{padding:19px}main{margin-top:20px}}
+  
+    .wide{grid-column:1/-1}
+    .rx-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 16px}
+    .rx-grid .full{grid-column:1/-1}
+    .rx-actions{display:flex;gap:10px;flex-wrap:wrap}
+    .rx-actions button{flex:1;min-width:180px}
+    .btn-secondary{background:#334a65}
+    .med-card{border:1px solid var(--line);border-radius:12px;padding:14px;margin:14px 0;background:#0d1a2b}
+    .med-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+    .med-head strong{color:var(--blue)}
+    .remove-med{width:auto;margin:0;padding:7px 10px;background:#7f1d1d;font-size:12px}
+    .rx-preview{background:#fff;color:#111;border-radius:10px;padding:24px;margin-top:16px}
+    .rx-preview:empty{display:none}
+    .rx-preview h3{color:#111;text-align:center;margin:0 0 18px}
+    .rx-preview .rx-muted{color:#444;font-size:12px}
+    .rx-preview .rx-drug{padding:12px 0;border-bottom:1px solid #bbb;white-space:pre-wrap}
+    .rx-preview .rx-sign{margin-top:48px;text-align:center}
+    .rx-preview .rx-sign:before{content:"";display:block;border-top:1px solid #222;width:260px;max-width:80%;margin:0 auto 7px}
+    .rx-legal{margin-top:14px;padding:12px;border-left:3px solid #fbbf24;background:#2a2416;color:#f8e8bb;border-radius:7px;font-size:12px;line-height:1.5}
+    .print-only{display:none}
+    @media(max-width:720px){.rx-grid{grid-template-columns:1fr}.rx-grid .full{grid-column:auto}.rx-actions{display:block}.rx-actions button{width:100%}}
+    @media print{
+      @page{size:A4;margin:18mm}
+      body{background:#fff!important;color:#111!important}
+      body *{visibility:hidden!important}
+      #prescriptionPrint,#prescriptionPrint *{visibility:visible!important}
+      #prescriptionPrint{display:block!important;position:absolute;left:0;top:0;width:100%;margin:0;padding:0;background:#fff;color:#111}
+      #prescriptionPrint .rx-preview{display:block!important;margin:0;padding:0;border:0;border-radius:0;background:#fff;color:#111}
+      #prescriptionPrint .rx-preview h3{color:#111}
+      #prescriptionPrint .rx-preview .rx-muted{color:#333}
+      #prescriptionPrint .rx-preview .rx-drug{border-color:#aaa}
+      #prescriptionPrint .rx-preview .rx-sign{break-inside:avoid}
+    }
+
   </style>
 </head>
 <body>
@@ -80,6 +114,36 @@
         <div class="notice">A calculadora não recomenda medicamentos nem determina a dose apropriada. Ela apenas realiza a operação matemática com os valores inseridos. Confirme prescrição, unidade, concentração, dose máxima, via e frequência antes da administração.</div>
       </section>
     </div>
+  
+    <section class="card wide" id="prescriptionModule">
+      <h2>Facilitador de prescrição</h2>
+      <p class="sub">Monte uma receita simples para conferência, impressão e assinatura manual. Os dados ficam somente nesta página durante o uso; não são enviados ao servidor nem salvos automaticamente.</p>
+      <div class="rx-grid">
+        <div class="full"><h3>Identificação do médico</h3></div>
+        <div><label for="rxDoctor">Nome completo</label><input id="rxDoctor" autocomplete="name" placeholder="Nome do médico"></div>
+        <div><label for="rxCrm">CRM / UF</label><input id="rxCrm" placeholder="Ex.: CRM-SP 123456"></div>
+        <div><label for="rxSpecialty">Especialidade (opcional)</label><input id="rxSpecialty" placeholder="Especialidade"></div>
+        <div><label for="rxPhone">Telefone do consultório</label><input id="rxPhone" placeholder="(00) 0000-0000"></div>
+        <div class="full"><label for="rxClinicAddress">Endereço profissional completo</label><input id="rxClinicAddress" placeholder="Rua, número, complemento, cidade/UF, CEP"></div>
+        <div class="full"><h3>Identificação do paciente</h3></div>
+        <div><label for="rxPatient">Nome completo</label><input id="rxPatient" autocomplete="name" placeholder="Nome completo do paciente"></div>
+        <div><label for="rxBirth">Data de nascimento (opcional)</label><input id="rxBirth" type="date"></div>
+        <div><label for="rxAge">Idade (opcional)</label><input id="rxAge" placeholder="Ex.: 42 anos"></div>
+        <div><label for="rxSex">Sexo (opcional)</label><select id="rxSex"><option value="">Não informado</option><option>Feminino</option><option>Masculino</option><option>Outro</option></select></div>
+        <div class="full"><label for="rxPatientAddress">Endereço do paciente (opcional)</label><input id="rxPatientAddress" placeholder="Endereço completo"></div>
+      </div>
+      <div class="med-head"><h3>Medicamentos</h3><span class="muted">Inclua um ou mais itens</span></div>
+      <div id="rxMedications"></div>
+      <div class="rx-actions">
+        <button type="button" id="rxAddMedication" class="btn-secondary">+ Adicionar medicamento</button>
+        <button type="button" id="rxGenerate">Gerar prévia da receita</button>
+        <button type="button" id="rxPrint" class="btn-secondary" disabled>Imprimir / Salvar PDF</button>
+      </div>
+      <div id="rxMessage" class="result" role="status" aria-live="polite"></div>
+      <div class="rx-legal"><strong>Importante — escopo desta versão:</strong> este módulo gera somente um modelo de receita simples para medicamentos que não exijam receituário especial ou retenção. Não emite Notificação de Receita A/B/B2, Receita de Controle Especial, receita de antimicrobianos ou outros documentos sujeitos a regras próprias. Antes de usar, o prescritor deve confirmar a classificação do medicamento e a legislação vigente. O documento impresso precisa ser conferido, datado e assinado pelo profissional. Não é receita eletrônica assinada digitalmente nem substitui integração ao SNCR.</div>
+      <div id="prescriptionPrint" class="print-only"><div id="rxPreview" class="rx-preview"></div></div>
+    </section>
+
   </main>
 
   <footer>
@@ -165,6 +229,72 @@
         '<p>Concentração informada: <strong>' + concentration.toLocaleString("pt-BR") + ' mg/mL</strong></p>' +
         '<div class="dose-value">' + volumeMl.toLocaleString("pt-BR", {maximumFractionDigits: 4}) + ' mL</div>';
     });
+
+    // Facilitador de prescrição — dados mantidos apenas em memória nesta página.
+    const rxMedications = $("rxMedications");
+    const rxMessage = $("rxMessage");
+    let rxMedicationCount = 0;
+    const rxValue = id => $(id).value.trim();
+    function addRxMedication(){
+      const n = ++rxMedicationCount;
+      const card = document.createElement("div");
+      card.className = "med-card";
+      card.dataset.medication = "1";
+      card.innerHTML = '<div class="med-head"><strong>Medicamento '+n+'</strong><button type="button" class="remove-med">Remover</button></div>'+
+        '<div class="rx-grid">'+
+        '<div class="full"><label>Nome do medicamento / princípio ativo</label><input data-field="name" placeholder="Nome conforme prescrição"></div>'+
+        '<div><label>Concentração / apresentação</label><input data-field="presentation" placeholder="Ex.: 500 mg, comprimido"></div>'+
+        '<div><label>Dose por administração</label><input data-field="dose" placeholder="Ex.: 1 comprimido"></div>'+
+        '<div><label>Via de administração</label><input data-field="route" placeholder="Ex.: oral"></div>'+
+        '<div><label>Frequência / horários</label><input data-field="frequency" placeholder="Ex.: a cada 8 horas"></div>'+
+        '<div><label>Duração do tratamento</label><input data-field="duration" placeholder="Ex.: 7 dias"></div>'+
+        '<div><label>Quantidade a dispensar</label><input data-field="quantity" placeholder="Ex.: 21 comprimidos"></div>'+
+        '<div class="full"><label>Orientações adicionais (opcional)</label><input data-field="instructions" placeholder="Ex.: tomar após alimentação"></div></div>';
+      card.querySelector(".remove-med").addEventListener("click",()=>{card.remove(); renumberRxMedications();});
+      rxMedications.appendChild(card);
+      renumberRxMedications();
+    }
+    function renumberRxMedications(){
+      [...rxMedications.querySelectorAll(".med-card")].forEach((card,i)=>card.querySelector(".med-head strong").textContent="Medicamento "+(i+1));
+      $("rxPrint").disabled=true;
+      $("rxPreview").innerHTML="";
+    }
+    function rxEscape(value){return escapeHTML(value).replace(/\n/g,"<br>");}
+    function generatePrescription(){
+      const doctor=rxValue("rxDoctor"), crm=rxValue("rxCrm"), address=rxValue("rxClinicAddress");
+      const patient=rxValue("rxPatient");
+      const cards=[...rxMedications.querySelectorAll(".med-card")];
+      if(!doctor||!crm||!address||!patient||!cards.length){
+        rxMessage.textContent="Preencha nome, CRM/UF, endereço profissional, nome do paciente e ao menos um medicamento.";
+        $("rxPrint").disabled=true; return;
+      }
+      const meds=cards.map((card,i)=>Object.fromEntries([...card.querySelectorAll("[data-field]")].map(el=>[el.dataset.field,el.value.trim()])));
+      if(meds.some(m=>!m.name||!m.dose||!m.route||!m.frequency||!m.duration||!m.quantity)){
+        rxMessage.textContent="Em cada medicamento, preencha nome, dose, via, frequência, duração e quantidade.";
+        $("rxPrint").disabled=true; return;
+      }
+      const date=new Date().toLocaleDateString("pt-BR");
+      const birth=rxValue("rxBirth");
+      const patientInfo=[rxValue("rxAge"),rxValue("rxSex")].filter(Boolean).join(" · ");
+      const patientAddress=rxValue("rxPatientAddress");
+      const specialty=rxValue("rxSpecialty");
+      const phone=rxValue("rxPhone");
+      const preview=$("rxPreview");
+      preview.innerHTML='<div style="display:flex;justify-content:space-between;gap:20px;align-items:flex-start"><div><strong>'+rxEscape(doctor)+'</strong><br>CRM: '+rxEscape(crm)+(specialty?'<br>'+rxEscape(specialty):'')+'<br>'+rxEscape(address)+(phone?'<br>Telefone: '+rxEscape(phone):'')+'</div><div style="text-align:right">Data: '+date+'</div></div>'+
+        '<hr style="border:0;border-top:1px solid #888;margin:18px 0"><h3>RECEITUÁRIO MÉDICO</h3>'+
+        '<p><strong>Paciente:</strong> '+rxEscape(patient)+(patientInfo?' · '+rxEscape(patientInfo):'')+(birth?' · Nascimento: '+rxEscape(birth.split("-").reverse().join("/")):'')+'</p>'+
+        (patientAddress?'<p><strong>Endereço:</strong> '+rxEscape(patientAddress)+'</p>':'')+
+        '<div style="margin-top:22px">'+meds.map((m,i)=>'<div class="rx-drug"><strong>'+(i+1)+'. '+rxEscape(m.name)+'</strong>'+(m.presentation?'<br>Apresentação: '+rxEscape(m.presentation):'')+'<br>Dose: '+rxEscape(m.dose)+'<br>Via: '+rxEscape(m.route)+'<br>Frequência: '+rxEscape(m.frequency)+'<br>Duração: '+rxEscape(m.duration)+'<br>Quantidade: '+rxEscape(m.quantity)+(m.instructions?'<br>Orientações: '+rxEscape(m.instructions):'')+'</div>').join("")+'</div>'+
+        '<div class="rx-sign">'+rxEscape(doctor)+'<br>CRM: '+rxEscape(crm)+'<br><span class="rx-muted">Assinatura e carimbo do prescritor</span></div>';
+      $("rxPrint").disabled=false;
+      rxMessage.textContent="Prévia gerada. Confira todos os dados, a classificação do medicamento, a dose, a posologia e a quantidade antes de imprimir.";
+    }
+    $("rxAddMedication").addEventListener("click",addRxMedication);
+    $("rxGenerate").addEventListener("click",generatePrescription);
+    $("rxPrint").addEventListener("click",()=>{if(!$("rxPrint").disabled)window.print();});
+    ["rxDoctor","rxCrm","rxClinicAddress","rxPatient","rxBirth","rxAge","rxSex","rxPatientAddress","rxSpecialty","rxPhone"].forEach(id=>$(id).addEventListener("input",()=>{$("rxPrint").disabled=true;}));
+    addRxMedication();
+
   </script>
 </body>
 </html>
