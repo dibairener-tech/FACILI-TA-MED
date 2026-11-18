@@ -59,7 +59,7 @@
         <button id="searchCode">Consultar código</button>
 
         <div id="cidResult" class="result" role="status" aria-live="polite"></div>
-        <p class="muted">Base local: DATASUS CID-10 V2008 + códigos U07 da tabela SIM. A base não incorpora automaticamente todas as atualizações posteriores.</p>
+        <p class="muted" id="cidVersion">Base local v2026.11 · carregando metadados…</p>
       </section>
 
       <section class="card">
@@ -83,7 +83,7 @@
   </main>
 
   <footer>
-    Base CID-10: DATASUS V2008 + códigos U07/SIM · Projeto Brazilian Utils (MIT). Confira atualizações e a classificação vigente.<br>
+    Base local v2026.11 · DATASUS V2008 + códigos U07/SIM + complementos OMS 2019/2020.<br>Projeto Brazilian Utils (MIT). Base auxiliar de consulta; confirme a classificação e as regras oficiais vigentes.<br>
     FACILI-TA MED · Criado por RENER DIBAI © 2026
   </footer>
 
@@ -91,6 +91,13 @@
   <script>
     const $ = (id) => document.getElementById(id);
     const CID10 = window.CID10_DATA || [];
+    const CID_META = window.CID10_META || {};
+    const versionLine = $("cidVersion");
+    if (versionLine) versionLine.textContent =
+      "Base local v" + (CID_META.version || "—") + " · " +
+      (CID_META.totalRecords || CID10.length).toLocaleString("pt-BR") +
+      " registros · sem consulta externa";
+
     const escapeHTML = (value) => String(value ?? "").replace(/[&<>"']/g, c => ({
       "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
     })[c]);
