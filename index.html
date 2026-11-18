@@ -68,6 +68,16 @@
       #prescriptionPrint .rx-preview .rx-sign{break-inside:avoid}
     }
 
+  
+    .catalog-wrap{position:relative}
+    .catalog-hint{font-size:11px;color:var(--muted);margin:5px 0 0}
+    .catalog-results{position:absolute;z-index:20;top:100%;left:0;right:0;max-height:280px;overflow:auto;background:#102139;border:1px solid #4b6685;border-radius:10px;box-shadow:0 14px 28px #0008}
+    .catalog-option{display:block;width:100%;text-align:left;margin:0;border-radius:0;background:transparent;border-bottom:1px solid #263b55;padding:11px 13px;font-weight:500}
+    .catalog-option:hover{background:#1d3b59}
+    .catalog-option small{display:block;color:#b8c8da;font-weight:400;margin-top:3px}
+    .catalog-warning{font-size:11px;color:#fbbf24;margin-top:5px;line-height:1.4}
+    .catalog-status{font-size:11px;color:var(--muted);margin-top:12px}
+
   </style>
 </head>
 <body>
@@ -134,13 +144,14 @@
       </div>
       <div class="med-head"><h3>Medicamentos</h3><span class="muted">Inclua um ou mais itens</span></div>
       <div id="rxMedications"></div>
+      <div class="catalog-status">Catálogo local inicial: 25 princípios ativos, com apresentações de referência. Não é uma lista completa de todos os medicamentos registrados no Brasil; a inclusão no catálogo não confirma registro ativo ou disponibilidade comercial.</div>
       <div class="rx-actions">
         <button type="button" id="rxAddMedication" class="btn-secondary">+ Adicionar medicamento</button>
         <button type="button" id="rxGenerate">Gerar prévia da receita</button>
         <button type="button" id="rxPrint" class="btn-secondary" disabled>Imprimir / Salvar PDF</button>
       </div>
       <div id="rxMessage" class="result" role="status" aria-live="polite"></div>
-      <div class="rx-legal"><strong>Importante — escopo desta versão:</strong> este módulo gera somente um modelo de receita simples para medicamentos que não exijam receituário especial ou retenção. Não emite Notificação de Receita A/B/B2, Receita de Controle Especial, receita de antimicrobianos ou outros documentos sujeitos a regras próprias. Antes de usar, o prescritor deve confirmar a classificação do medicamento e a legislação vigente. O documento impresso precisa ser conferido, datado e assinado pelo profissional. Não é receita eletrônica assinada digitalmente nem substitui integração ao SNCR.</div>
+      <div class="rx-legal"><strong>Importante — escopo desta versão:</strong> o catálogo é uma referência local inicial, não uma base regulatória completa. Antimicrobianos e medicamentos sujeitos a controle especial exibem alerta e não devem ser emitidos neste modelo simples. O sistema não valida registro ativo, disponibilidade, bula, dose ou adequação clínica. O prescritor deve confirmar a classificação e as regras vigentes. O documento precisa ser conferido, datado e assinado; não é receita eletrônica assinada digitalmente nem substitui os receituários e sistemas oficiais.</div>
       <div id="prescriptionPrint" class="print-only"><div id="rxPreview" class="rx-preview"></div></div>
     </section>
 
@@ -152,6 +163,7 @@
   </footer>
 
   <script src="cid-data.js"></script>
+  <script src="medication-data.js"></script>
   <script>
     const $ = (id) => document.getElementById(id);
     const CID10 = window.CID10_DATA || [];
@@ -235,6 +247,34 @@
     const rxMessage = $("rxMessage");
     let rxMedicationCount = 0;
     const rxValue = id => $(id).value.trim();
+
+    function drugPresentationPicker(card,drug){
+      card.querySelector("[data-presentation-picker]")?.remove();
+      const wrap=document.createElement("div");
+      wrap.className="full";wrap.dataset.presentationPicker="1";
+      const label=document.createElement("label");label.textContent="Escolha a apresentação cadastrada";
+      const select=document.createElement("select");select.innerHTML='<option value="">Selecione a apresentação…</option>';
+      drug.items.forEach((item,index)=>{
+        const option=document.createElement("option");option.value=String(index);option.textContent=item[0];select.appendChild(option);
+      });
+      select.addEventListener("change",()=>{
+        const item=drug.items[Number(select.value)];
+        if(!item)return;
+        card.querySelector('[data-field="presentation"]').value=item[0];
+        card.querySelector('[data-field="form"]').value=item[1];
+        card.querySelector('[data-field="route"]').value=item[3];
+        // Concentração e forma são identificadas; dose/posologia/quantidade continuam sob decisão do prescritor.
+        card.querySelector('[data-field="dose"]').value="";
+        card.querySelector('[data-field="frequency"]').value="";
+        card.querySelector('[data-field="duration"]').value="";
+        card.querySelector('[data-field="quantity"]').value="";
+        $("rxPrint").disabled=true;$("rxPreview").innerHTML="";
+      });
+      wrap.append(label,select);
+      const grid=card.querySelector(".rx-grid");
+      grid.insertBefore(wrap,grid.children[1]);
+    }
+
     function addRxMedication(){
       const n = ++rxMedicationCount;
       const card = document.createElement("div");
@@ -242,15 +282,47 @@
       card.dataset.medication = "1";
       card.innerHTML = '<div class="med-head"><strong>Medicamento '+n+'</strong><button type="button" class="remove-med">Remover</button></div>'+
         '<div class="rx-grid">'+
-        '<div class="full"><label>Nome do medicamento / princípio ativo</label><input data-field="name" placeholder="Nome conforme prescrição"></div>'+
-        '<div><label>Concentração / apresentação</label><input data-field="presentation" placeholder="Ex.: 500 mg, comprimido"></div>'+
-        '<div><label>Dose por administração</label><input data-field="dose" placeholder="Ex.: 1 comprimido"></div>'+
-        '<div><label>Via de administração</label><input data-field="route" placeholder="Ex.: oral"></div>'+
-        '<div><label>Frequência / horários</label><input data-field="frequency" placeholder="Ex.: a cada 8 horas"></div>'+
-        '<div><label>Duração do tratamento</label><input data-field="duration" placeholder="Ex.: 7 dias"></div>'+
-        '<div><label>Quantidade a dispensar</label><input data-field="quantity" placeholder="Ex.: 21 comprimidos"></div>'+
-        '<div class="full"><label>Orientações adicionais (opcional)</label><input data-field="instructions" placeholder="Ex.: tomar após alimentação"></div></div>';
+        '<div class="full catalog-wrap"><label>Buscar medicamento no catálogo local ou digitar manualmente</label><input data-field="name" class="rxCatalogSearch" placeholder="Digite: amoxicilina, dipirona, losartana..." autocomplete="off"><div class="catalog-results" hidden></div><div class="catalog-hint">Sugestões offline; selecione o princípio ativo e depois a apresentação. Você também pode digitar um item fora do catálogo.</div><div class="catalog-warning" data-catalog-warning></div></div>'+
+        '<div><label>Concentração / apresentação</label><input data-field="presentation" placeholder="Ex.: 500 mg, cápsula"></div>'+
+        '<div><label>Forma farmacêutica (opcional)</label><input data-field="form" placeholder="Ex.: cápsula"></div>'+
+        '<div><label>Dose por administração</label><input data-field="dose" placeholder="Preenchimento pelo prescritor"></div>'+
+        '<div><label>Via de administração</label><input data-field="route" placeholder="Preenchimento pelo prescritor"></div>'+
+        '<div><label>Frequência / horários</label><input data-field="frequency" placeholder="Definida pelo prescritor"></div>'+
+        '<div><label>Duração do tratamento</label><input data-field="duration" placeholder="Definida pelo prescritor"></div>'+
+        '<div><label>Quantidade a dispensar</label><input data-field="quantity" placeholder="Definida pelo prescritor"></div>'+
+        '<div class="full"><label>Orientações adicionais (opcional)</label><input data-field="instructions" placeholder="Orientações do prescritor"></div></div>';
       card.querySelector(".remove-med").addEventListener("click",()=>{card.remove(); renumberRxMedications();});
+      const search=card.querySelector(".rxCatalogSearch");
+      const results=card.querySelector(".catalog-results");
+      const warning=card.querySelector("[data-catalog-warning]");
+      const catalog=Array.isArray(window.MEDICATION_CATALOG)?window.MEDICATION_CATALOG:[];
+      function showSuggestions(){
+        const q=normalizeText(search.value);
+        results.innerHTML="";
+        if(q.length<2){results.hidden=true;return;}
+        const matches=catalog.filter(drug=>normalizeText([drug.name,...(drug.aliases||[])].join(" ")).includes(q)).slice(0,12);
+        if(!matches.length){results.hidden=true;return;}
+        matches.forEach(drug=>{
+          const option=document.createElement("button");
+          option.type="button";option.className="catalog-option";
+          option.innerHTML=escapeHTML(drug.name)+'<small>'+drug.items.length+' apresentação(ões) · '+escapeHTML(drug.category)+'</small>';
+          option.addEventListener("click",()=>{
+            search.value=drug.name;
+            search.dataset.catalogId=drug.id;
+            warning.textContent=drug.category.toLowerCase().includes("antimicrobiano") || drug.category.toLowerCase().includes("controle especial")
+              ? "ATENÇÃO: "+drug.category+". Este módulo não emite o receituário específico. Não imprimir como receita simples."
+              : "Catálogo informativo: confirme apresentação, registro, bula e enquadramento sanitário antes de emitir.";
+            results.innerHTML="";
+            drugPresentationPicker(card,drug);
+          });
+          results.appendChild(option);
+        });
+        results.hidden=false;
+      }
+      search.addEventListener("input",()=>{delete search.dataset.catalogId;warning.textContent="";card.querySelector("[data-presentation-picker]")?.remove();showSuggestions();});
+      search.addEventListener("focus",showSuggestions);
+      search.addEventListener("keydown",e=>{if(e.key==="Escape")results.hidden=true;});
+      document.addEventListener("click",e=>{if(!card.contains(e.target))results.hidden=true;});
       rxMedications.appendChild(card);
       renumberRxMedications();
     }
